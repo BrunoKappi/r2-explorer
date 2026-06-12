@@ -7,7 +7,7 @@
     "dev": "node dev-runner.js",
     "dev:frontend": "vite",
     "dev:backend": "tsx backend/api/index.ts",
-    "build": "vite build",
+    "build": "vite build && node generate-redirects.js",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },

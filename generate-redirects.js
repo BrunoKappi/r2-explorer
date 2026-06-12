@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const apiUrl = process.env.VITE_API_URL || "https://r2-explorer.vercel.app";
+const apiUrl = process.env.VITE_API_URL || "------";
 const cleanUrl = apiUrl.replace(/\/$/, "");
 
 console.log(

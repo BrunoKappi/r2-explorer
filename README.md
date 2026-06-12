@@ -86,7 +86,7 @@ Crie um arquivo chamado **`.env`** no diretório raiz do projeto (e também dent
 5. **`ACCESS_PASSWORD`**:
    - **O que significa**: Uma senha de acesso requerida para desbloquear o painel e realizar requisições ao bucket.
    - **Para que serve**: Impede que pessoas não autorizadas acessem e manipulem seus arquivos caso descubram o link público de deploy (como Netlify ou Vercel).
-   - **Como configurar**: Defina qualquer senha forte (ex: `Snulpdog12!`). O frontend solicitará essa senha na primeira abertura do site e a salvará no navegador (`localStorage`) para os próximos acessos.
+   - **Como configurar**: Defina qualquer senha forte (ex: `uma_senha_forte_aqui`). O frontend solicitará essa senha na primeira abertura do site e a salvará no navegador (`localStorage`) para os próximos acessos.
 
 ```env
 # Modelo de configuração para o seu arquivo .env
@@ -94,7 +94,7 @@ R2_ACCESS_KEY_ID="sua_chave_de_acesso_aqui"
 R2_SECRET_ACCESS_KEY="sua_chave_secreta_aqui"
 R2_ENDPOINT="https://seu_id_de_conta_aqui.r2.cloudflarestorage.com"
 R2_BUCKET_NAME="bkappi"
-ACCESS_PASSWORD="Snulpdog12!"
+ACCESS_PASSWORD="sua_senha_aqui"
 ```
 
 > 🛑 **Importante:** Nunca adicione o arquivo `.env` ao seu repositório de controle de versão (como Git). As regras padrão do `.gitignore` já vêm pré-configuradas para omitir arquivos `.env` e `.env.production` das alterações submetidas.

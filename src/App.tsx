@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import FileExplorer from './components/FileExplorer';
-import UploadsPopup from './features/uploads/UploadsPopup';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import FileExplorer from "./components/FileExplorer";
+import UploadsPopup from "./features/uploads/UploadsPopup";
 
-import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigationStore } from './stores/navigationStore';
-import { r2Service } from './services/r2Service';
-import { Lock, KeyRound } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigationStore } from "./stores/navigationStore";
+import { r2Service } from "./services/r2Service";
+import { Lock, KeyRound } from "lucide-react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,25 +23,32 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { buckets, activeBucketName, setBuckets, setActiveBucketName, theme } = useNavigationStore();
-  const [isPasswordValid, setIsPasswordValid] = useState<boolean>(!!localStorage.getItem('r2_access_password'));
-  const [passwordInput, setPasswordInput] = useState('');
+  const { buckets, activeBucketName, setBuckets, setActiveBucketName, theme } =
+    useNavigationStore();
+  const [isPasswordValid, setIsPasswordValid] = useState<boolean>(
+    !!localStorage.getItem("r2_access_password"),
+  );
+  const [passwordInput, setPasswordInput] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Sync theme with document class list
   useEffect(() => {
     const root = window.document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
+    if (theme === "dark") {
+      root.classList.add("dark");
     } else {
-      root.classList.remove('dark');
+      root.classList.remove("dark");
     }
   }, [theme]);
 
   // Load buckets on boot
-  const { data: bucketsData, error: queryError, refetch } = useQuery({
-    queryKey: ['buckets'],
+  const {
+    data: bucketsData,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ["buckets"],
     queryFn: () => r2Service.listBuckets(),
     retry: false,
     enabled: isPasswordValid,
@@ -49,9 +56,9 @@ function AppContent() {
 
   useEffect(() => {
     if (queryError) {
-      localStorage.removeItem('r2_access_password');
+      localStorage.removeItem("r2_access_password");
       setIsPasswordValid(false);
-      setErrorMsg('Sessão expirada ou senha inválida.');
+      setErrorMsg("Sessão expirada ou senha inválida.");
     }
   }, [queryError]);
 
@@ -69,16 +76,16 @@ function AppContent() {
     e.preventDefault();
     if (!passwordInput.trim()) return;
     setIsVerifying(true);
-    setErrorMsg('');
+    setErrorMsg("");
 
     const success = await r2Service.verifyPassword(passwordInput);
     if (success) {
-      localStorage.setItem('r2_access_password', passwordInput);
+      localStorage.setItem("r2_access_password", passwordInput);
       setIsPasswordValid(true);
-      setErrorMsg('');
+      setErrorMsg("");
       refetch();
     } else {
-      setErrorMsg('Senha incorreta. Tente novamente.');
+      setErrorMsg("Senha incorreta. Tente novamente.");
     }
     setIsVerifying(false);
   };
@@ -95,8 +102,12 @@ function AppContent() {
           </div>
 
           <div className="text-center flex flex-col gap-1.5">
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">R2 Explorer</h2>
-            <p className="text-xs text-zinc-550 dark:text-zinc-400">Insira a senha de acesso para abrir o painel</p>
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+              R2 Explorer
+            </h2>
+            <p className="text-xs text-zinc-550 dark:text-zinc-400">
+              Insira a senha de acesso para abrir o painel
+            </p>
           </div>
 
           <form onSubmit={handleVerify} className="w-full flex flex-col gap-4">
@@ -121,12 +132,11 @@ function AppContent() {
             <button
               type="submit"
               disabled={isVerifying}
-              className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
-            >
+              className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2">
               {isVerifying ? (
                 <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
               ) : (
-                'Acessar Explorer'
+                "Acessar Explorer"
               )}
             </button>
           </form>
@@ -136,10 +146,9 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 flex flex-col font-sans select-none overflow-hidden transition-colors">
-      
+    <div className="h-screen bg-zinc-50/50 dark:bg-zinc-950 flex flex-col font-sans select-none overflow-hidden transition-colors">
       {/* MAIN LAYOUT CANVAS FRAME */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-5 flex flex-col justify-start overflow-hidden">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-5 flex flex-col overflow-hidden">
         <FileExplorer />
       </main>
 

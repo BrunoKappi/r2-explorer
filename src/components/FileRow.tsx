@@ -100,6 +100,7 @@ export default function FileRow({
   } = useNavigationStore();
 
   const [isDragOverRow, setIsDragOverRow] = React.useState(false);
+  const [draggable, setDraggable] = React.useState(true);
   const queryClient = useQueryClient();
 
   const isSelected = selectedPaths.includes(item.path);
@@ -220,13 +221,22 @@ export default function FileRow({
     const draggedPath = e.dataTransfer.getData("text/plain");
     if (!draggedPath || draggedPath === item.path) return;
 
-    if (item.path.startsWith(draggedPath + "/")) {
-      alert("Cannot move a folder inside its own subdirectories.");
-      return;
+    // Determine paths to move (single item vs multiple selection)
+    const isDraggedSelected = selectedPaths.includes(draggedPath);
+    const pathsToMove = isDraggedSelected ? selectedPaths : [draggedPath];
+
+    // Check if moving folder inside its own subdirectory
+    for (const path of pathsToMove) {
+      const folderPrefix = path.endsWith("/") ? path : `${path}/`;
+      const targetPrefix = item.path.endsWith("/") ? item.path : `${item.path}/`;
+      if (item.path === path || targetPrefix.startsWith(folderPrefix)) {
+        alert("Cannot move a folder inside itself or its own subdirectories.");
+        return;
+      }
     }
 
     try {
-      await r2Service.moveObjects([draggedPath], item.path);
+      await r2Service.moveObjects(pathsToMove, item.path);
       const bucketName =
         useNavigationStore.getState().activeBucketName || "bkappi";
       queryClient.invalidateQueries({
@@ -234,9 +244,33 @@ export default function FileRow({
       });
       queryClient.invalidateQueries({ queryKey: ["folders-tree", bucketName] });
       queryClient.invalidateQueries({ queryKey: ["folders-count"] });
+
+      if (isDraggedSelected) {
+        useNavigationStore.getState().clearSelection();
+      }
     } catch (err: any) {
       alert(err?.message || "Error moving item.");
     }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    // Disable drag if clicking checkboxes, buttons, options menu, or holding modifier keys (Ctrl/Shift/Meta)
+    if (
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest(".no-row-click") ||
+      target.closest(".custom-checkbox") ||
+      e.ctrlKey || e.metaKey || e.shiftKey
+    ) {
+      setDraggable(false);
+    } else {
+      setDraggable(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setDraggable(true);
   };
 
   return (
@@ -244,10 +278,13 @@ export default function FileRow({
       id={`file-row-${item.id.replace(/[^a-zA-Z0-0]/g, "-")}`}
       data-explorer-row="true"
       data-path={item.path}
-      draggable={false}
+      draggable={draggable}
+      onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onMouseDown={handleMouseDown}
+      onMouseLeave={handleMouseLeave}
       onClick={handleRowClick}
       onDoubleClick={handleRowDoubleClick}
       onContextMenu={handleRightClick}

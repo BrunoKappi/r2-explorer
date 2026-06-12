@@ -99,6 +99,13 @@ export default function FileExplorer() {
       return;
     }
 
+    // Ignore if click is on a file/folder row and no modifier keys are held
+    // so that we don't interfere with native drag-and-drop actions on rows
+    const isRow = target.closest('[data-explorer-row="true"]');
+    if (isRow && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      return;
+    }
+
     const startX = e.clientX;
     const startY = e.clientY;
     let isSelecting = false;
@@ -216,7 +223,7 @@ export default function FileExplorer() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="flex-1 flex flex-col md:flex-row bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg shadow-xs overflow-hidden h-[calc(100vh-140px)] relative transition-colors duration-150"
+      className="flex-1 flex flex-col md:flex-row bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg shadow-xs overflow-hidden relative transition-colors duration-150"
       onClick={() => closeContextMenu()}
     >
       {localToast && (
@@ -254,9 +261,9 @@ export default function FileExplorer() {
         {/* CONTAINER MAIN LIST PANEL */}
         <div 
           onMouseDown={handleMouseDown}
-          className="flex-1 overflow-y-auto min-h-0 bg-white dark:bg-zinc-900 relative flex flex-col justify-between transition-colors scrollbar-thin select-none"
+          className="flex-1 overflow-hidden min-h-0 bg-white dark:bg-zinc-900 relative flex flex-col justify-between transition-colors select-none"
         >
-          <div>
+          <div className="flex-1 overflow-hidden flex flex-col min-h-0">
             {isLoading ? (
               <div className="p-4">
                 <LoadingState />
@@ -264,7 +271,7 @@ export default function FileExplorer() {
             ) : sortedDisplayItems.length === 0 ? (
               <EmptyState isSearch={!!searchQuery} />
             ) : (
-              <div className="overflow-x-auto scrollbar-thin">
+              <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-thin">
                 <FileExplorerTable
                   sortedDisplayItems={sortedDisplayItems}
                   allVisiblePaths={allVisiblePaths}

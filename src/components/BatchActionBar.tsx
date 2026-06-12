@@ -18,6 +18,7 @@ export default function BatchActionBar() {
   const { selectedPaths, clearSelection, openDialog, activeBucketName, currentPath, searchQuery, viewPrefixesAsFolders } = useNavigationStore();
   const [copiedToast, setCopiedToast] = useState(false);
   const [downloadingZip, setDownloadingZip] = useState(false);
+  const [zipProgress, setZipProgress] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const queryClient = useQueryClient();
@@ -128,13 +129,43 @@ export default function BatchActionBar() {
   };
 
   const handleDownloadAll = async () => {
+    let timer: any = null;
     try {
       setDownloadingZip(true);
+      setZipProgress(0);
+
+      // Estimate zipping speed at around 800 KB/s
+      const totalSize = estimatedZipSize || 1024 * 1024; // fallback 1MB
+      const estimatedTimeMs = Math.max(2500, (totalSize / (800 * 1024)) * 1000);
+      const intervalMs = 100;
+      const totalSteps = estimatedTimeMs / intervalMs;
+      
+      let currentStep = 0;
+      timer = setInterval(() => {
+        currentStep++;
+        setZipProgress((prev) => {
+          if (prev >= 98) {
+            clearInterval(timer);
+            return 98;
+          }
+          const ratio = currentStep / totalSteps;
+          const target = Math.min(98, Math.round(98 * (1 - Math.exp(-2.5 * ratio))));
+          return Math.max(prev, target);
+        });
+      }, intervalMs);
+
       await r2Service.downloadZip(selectedPaths);
+      
+      if (timer) clearInterval(timer);
+      setZipProgress(100);
+      // Wait a short time to let the user see it hits 100%
+      await new Promise(resolve => setTimeout(resolve, 600));
     } catch (err: any) {
       alert(err.message || 'Error occurred while performing ZIP compressed download.');
     } finally {
+      if (timer) clearInterval(timer);
       setDownloadingZip(false);
+      setZipProgress(0);
     }
   };
 
@@ -150,6 +181,12 @@ export default function BatchActionBar() {
           transition={{ type: 'spring', damping: 22, stiffness: 280 }}
           className="fixed bottom-6 left-0 right-0 mx-auto z-30 w-fit min-w-[280px] md:min-w-[400px] max-w-[calc(100vw-2rem)] md:max-w-2xl bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl flex flex-col select-none font-sans text-xs text-zinc-100 overflow-visible"
         >
+          {downloadingZip && (
+            <div 
+              className={`absolute top-0 left-0 h-1 bg-emerald-500 transition-all duration-150 z-50 ${zipProgress >= 99 ? 'rounded-t-2xl' : 'rounded-tl-2xl'}`} 
+              style={{ width: `${zipProgress}%` }} 
+            />
+          )}
           {/* Collapsible Details Area */}
           <AnimatePresence>
             {isExpanded && (
@@ -259,59 +296,70 @@ export default function BatchActionBar() {
             </div>
 
             <div className="flex items-center gap-0.5 sm:gap-1 font-sans text-[11px] flex-nowrap shrink-0">
-              {/* Copy paths */}
-              <button
-                onClick={handleCopyAllPaths}
-                title={copiedToast ? t('batchBar.copied') : t('batchBar.copyPaths')}
-                className="h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-zinc-800 text-zinc-355 hover:text-white transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap flex-nowrap shrink-0"
-              >
-                <Copy size={12.5} className="shrink-0" />
-                <span className="hidden lg:inline whitespace-nowrap">{copiedToast ? t('batchBar.copied') : t('batchBar.copyPaths')}</span>
-              </button>
+              {downloadingZip ? (
+                <div className="flex items-center gap-2 px-2.5 py-1.5 text-emerald-400 font-medium">
+                  <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0"></div>
+                  <span className="font-mono text-xs font-semibold whitespace-nowrap">
+                    {t('batchBar.compressing')} {zipProgress}%
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {/* Copy paths */}
+                  <button
+                    onClick={handleCopyAllPaths}
+                    title={copiedToast ? t('batchBar.copied') : t('batchBar.copyPaths')}
+                    className="h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-zinc-800 text-zinc-355 hover:text-white transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap flex-nowrap shrink-0"
+                  >
+                    <Copy size={12.5} className="shrink-0" />
+                    <span className="hidden lg:inline whitespace-nowrap">{copiedToast ? t('batchBar.copied') : t('batchBar.copyPaths')}</span>
+                  </button>
 
-              {/* Move objects */}
-              <button
-                onClick={() => openDialog('move', selectedPaths)}
-                title={t('batchBar.move')}
-                className="h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-zinc-800 text-zinc-355 hover:text-white transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap flex-nowrap shrink-0"
-              >
-                <FolderSymlink size={12.5} className="shrink-0" />
-                <span className="hidden lg:inline whitespace-nowrap">{t('batchBar.move')}</span>
-              </button>
+                  {/* Move objects */}
+                  <button
+                    onClick={() => openDialog('move', selectedPaths)}
+                    title={t('batchBar.move')}
+                    className="h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-zinc-800 text-zinc-355 hover:text-white transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap flex-nowrap shrink-0"
+                  >
+                    <FolderSymlink size={12.5} className="shrink-0" />
+                    <span className="hidden lg:inline whitespace-nowrap">{t('batchBar.move')}</span>
+                  </button>
 
-              {/* Download ZIP */}
-              <button
-                onClick={handleDownloadAll}
-                disabled={downloadingZip}
-                className={`h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap flex-nowrap shrink-0 ${downloadingZip ? 'opacity-65 pointer-events-none' : ''}`}
-                title="Download selected items as a ZIP archive"
-              >
-                <DownloadCloud size={12.5} className={`shrink-0 ${downloadingZip ? "animate-pulse" : ""}`} />
-                <span className="font-semibold whitespace-nowrap hidden lg:inline">{downloadingZip ? t('batchBar.compressing') : t('batchBar.downloadZip')}</span>
-              </button>
+                  {/* Download ZIP */}
+                  <button
+                    onClick={handleDownloadAll}
+                    disabled={downloadingZip}
+                    className={`h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap flex-nowrap shrink-0 ${downloadingZip ? 'opacity-65 pointer-events-none' : ''}`}
+                    title="Download selected items as a ZIP archive"
+                  >
+                    <DownloadCloud size={12.5} className={`shrink-0 ${downloadingZip ? "animate-pulse" : ""}`} />
+                    <span className="font-semibold whitespace-nowrap hidden lg:inline">{downloadingZip ? t('batchBar.compressing') : t('batchBar.downloadZip')}</span>
+                  </button>
 
-              <div className="h-4 w-px bg-zinc-800 mx-0.25 sm:mx-1 shrink-0" />
+                  <div className="h-4 w-px bg-zinc-800 mx-0.25 sm:mx-1 shrink-0" />
 
-              {/* Batch delete */}
-              <button
-                onClick={() => openDialog('delete', selectedPaths)}
-                title={t('batchBar.delete')}
-                className="h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-red-950/55 hover:text-red-400 text-red-500 transition-all flex items-center gap-1 cursor-pointer font-bold whitespace-nowrap flex-nowrap shrink-0"
-              >
-                <Trash2 size={12.5} className="shrink-0" />
-                <span className="hidden lg:inline whitespace-nowrap">{t('batchBar.delete')}</span>
-              </button>
+                  {/* Batch delete */}
+                  <button
+                    onClick={() => openDialog('delete', selectedPaths)}
+                    title={t('batchBar.delete')}
+                    className="h-8 px-1.5 sm:px-2.5 rounded-lg hover:bg-red-950/55 hover:text-red-400 text-red-500 transition-all flex items-center gap-1 cursor-pointer font-bold whitespace-nowrap flex-nowrap shrink-0"
+                  >
+                    <Trash2 size={12.5} className="shrink-0" />
+                    <span className="hidden lg:inline whitespace-nowrap">{t('batchBar.delete')}</span>
+                  </button>
 
-              <div className="h-4 w-px bg-zinc-800 mx-0.25 sm:mx-1 shrink-0" />
+                  <div className="h-4 w-px bg-zinc-800 mx-0.25 sm:mx-1 shrink-0" />
 
-              {/* Cancel */}
-              <button
-                onClick={clearSelection}
-                title="Clear selection"
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
-              >
-                <X size={12.5} className="shrink-0" />
-              </button>
+                  {/* Cancel */}
+                  <button
+                    onClick={clearSelection}
+                    title="Clear selection"
+                    className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+                  >
+                    <X size={12.5} className="shrink-0" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </motion.div>

@@ -69,7 +69,7 @@ export function FileExplorerTable({ sortedDisplayItems, allVisiblePaths, allObje
     <div className="w-full relative select-none">
       <table className="w-full border-collapse text-left select-none relative">
         {/* Core Table Header */}
-        <thead className="bg-zinc-50/50 dark:bg-zinc-950/80 border-b border-zinc-100 dark:border-zinc-800 text-[10.5px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider sticky top-0 z-10 select-none transition-colors">
+        <thead className="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800 text-[10.5px] font-semibold text-zinc-400 dark:text-zinc-550 uppercase tracking-wider sticky top-0 z-10 select-none transition-colors">
           <tr className="h-9">
             <th className="pl-4 pr-1 py-2 w-10 text-left font-semibold">
               <div

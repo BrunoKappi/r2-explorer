@@ -7,8 +7,7 @@ import express from 'express';
 import path from 'path';
 import multer from 'multer';
 import { Writable } from 'stream';
-import { createServer as createViteServer } from 'vite';
-
+import cors from 'cors';
 import { ZipArchive } from 'archiver';
 import {
   S3Client,
@@ -22,12 +21,25 @@ import {
   CreateBucketCommand
 } from '@aws-sdk/client-s3';
 
-// Load environment variables for local testing and force override pre-defined system variables if present in `.env`
+// Load environment variables for local testing
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Enable CORS
+app.use(cors({
+  origin: [
+    'https://bkappi-bucket.netlify.app',
+    'https://bucket.bkappi.com',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Enable JSON bodies with limit up to 50MB
 app.use(express.json({ limit: '50mb' }));
@@ -55,8 +67,6 @@ function resolveActualBucketName(bucketName: string | undefined): string {
   const sanitized = sanitizeValue(bucketName);
   const defaultBucketName = sanitizeValue(process.env.R2_BUCKET_NAME, '');
   const customDomain = sanitizeValue(process.env.R2_CUSTOM_DOMAIN, '');
-  // If the bucket name is empty, or equals the custom domain,
-  // map it to the actual default bucket name so the operation succeeds on Cloudflare R2
   if (!sanitized || (customDomain && sanitized === customDomain)) {
     return defaultBucketName;
   }
@@ -77,9 +87,6 @@ async function ensureBucketExists(bucketName: string): Promise<void> {
     console.log(`[R2] Bucket "${cleanBucket}" is successfully ensured/created.`);
     verifiedBuckets.add(cleanBucket);
   } catch (err: any) {
-    // With scoped credentials, CreateBucketCommand might return AccessDenied, UnknownError, or Forbidden.
-    // In any case, we assume the bucket already exists or is pre-managed, and we mark it as verified
-    // so we don't repeat this check on every subsequent operation.
     console.log(`[R2] Bucket "${cleanBucket}" initialized. Using existing bucket.`);
     verifiedBuckets.add(cleanBucket);
   }
@@ -92,7 +99,6 @@ function getR2Client(): S3Client {
 
   console.log('[R2 Config] Loaded endpoint:', endpoint);
 
-  // Sanitize endpoint: extract only the protocol and host if it contains any path (e.g. /bkappi)
   try {
     if (endpoint) {
       if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
@@ -107,7 +113,6 @@ function getR2Client(): S3Client {
     console.error('[R2 Config] Failed parsing endpoint as URL - using as is:', endpoint, e);
   }
 
-  // If the endpoint is a custom domain instead of a direct R2/S3 endpoint, we must use the direct endpoint for API operations
   let s3Endpoint = endpoint;
   if (s3Endpoint && !s3Endpoint.includes('.r2.cloudflarestorage.com')) {
     const directEndpoint = sanitizeValue(process.env.R2_API_ENDPOINT || process.env.R2_ENDPOINT, '');
@@ -130,7 +135,6 @@ function getR2Client(): S3Client {
   if (!s3Client || currentClientKey !== clientKey) {
     console.log('[R2 Config] Initializing R2 Client with sanitized S3 endpoint:', s3Endpoint);
     
-    // Cloudflare R2 requires region to be "auto"
     s3Client = new S3Client({
       region: 'auto',
       endpoint: s3Endpoint,
@@ -145,15 +149,11 @@ function getR2Client(): S3Client {
   return s3Client;
 }
 
-// Multer memory storage for uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
 });
 
-/**
- * MIME type mapping for cleaner presentation in client UI
- */
 function getMIMETypeFromExtension(fileName: string): string {
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
@@ -184,9 +184,6 @@ function getMIMETypeFromExtension(fileName: string): string {
   }
 }
 
-/**
- * Resolves the public CDN URL for objects residing in specific buckets
- */
 function getPublicUrlForObject(bucketName: string, key: string): string {
   const cleanBucket = sanitizeValue(bucketName);
   const defaultBucket = sanitizeValue(process.env.R2_BUCKET_NAME, '');
@@ -197,7 +194,7 @@ function getPublicUrlForObject(bucketName: string, key: string): string {
   return `/api/r2/download?bucket=${encodeURIComponent(cleanBucket)}&key=${encodeURIComponent(key)}`;
 }
 
-// Ensure S3 credentials are functional and list buckets to verify (returning only bkappi)
+// Routes
 app.get('/api/r2/buckets', async (req, res) => {
   const defaultBucketName = sanitizeValue(process.env.R2_BUCKET_NAME, 'r2-bucket');
   res.json([
@@ -208,7 +205,6 @@ app.get('/api/r2/buckets', async (req, res) => {
   ]);
 });
 
-// List files and directories within a bucket representing tree structure
 app.get('/api/r2/objects', async (req, res) => {
   const bucketName = resolveActualBucketName(req.query.bucket as string || process.env.R2_BUCKET_NAME);
   const rawPrefix = (req.query.prefix as string) || '';
@@ -220,7 +216,6 @@ app.get('/api/r2/objects', async (req, res) => {
     return res.status(400).json({ error: 'É necessário informar o nome do bucket.' });
   }
 
-  // If a search query is passed, run a global recursive bucket scan
   if (searchTerm) {
     try {
       await ensureBucketExists(bucketName);
@@ -236,14 +231,14 @@ app.get('/api/r2/objects', async (req, res) => {
       if (response.Contents) {
         for (const obj of response.Contents) {
           if (!obj.Key) continue;
-          if (obj.Key.endsWith('/')) continue; // Skip directory placeholder markers
+          if (obj.Key.endsWith('/')) continue;
 
           const parts = obj.Key.split('/');
           const fileName = parts[parts.length - 1];
           const parentPath = parts.slice(0, parts.length - 1).join('/');
           items.push({
             id: obj.Key,
-            name: obj.Key, // display full path of the file
+            name: obj.Key,
             type: 'file',
             path: obj.Key,
             parentPath: parentPath,
@@ -268,13 +263,11 @@ app.get('/api/r2/objects', async (req, res) => {
     }
   }
 
-  // S3 prefix matching requires folders to end with '/' and start clean
   let prefix = rawPrefix;
   if (prefix && !prefix.endsWith('/')) {
     prefix = `${prefix}/`;
   }
 
-  // If we are in flat mode, list all files recursively under currentPrefix
   if (flat) {
     try {
       await ensureBucketExists(bucketName);
@@ -282,7 +275,7 @@ app.get('/api/r2/objects', async (req, res) => {
 
       const command = new ListObjectsV2Command({
         Bucket: bucketName,
-        Prefix: prefix, // gets everything inside current folder recursively
+        Prefix: prefix,
       });
 
       const response = await client.send(command);
@@ -291,8 +284,8 @@ app.get('/api/r2/objects', async (req, res) => {
       if (response.Contents) {
         for (const obj of response.Contents) {
           if (!obj.Key) continue;
-          if (obj.Key === prefix) continue; // Skip current prefix directory marker
-          if (obj.Key.endsWith('/')) continue; // Skip empty folder markers
+          if (obj.Key === prefix) continue;
+          if (obj.Key.endsWith('/')) continue;
 
           const parts = obj.Key.split('/');
           const fileName = parts[parts.length - 1];
@@ -300,7 +293,7 @@ app.get('/api/r2/objects', async (req, res) => {
 
           items.push({
             id: obj.Key,
-            name: obj.Key, // display the entire path of the file
+            name: obj.Key,
             type: 'file',
             path: obj.Key,
             parentPath: parentPath,
@@ -325,7 +318,6 @@ app.get('/api/r2/objects', async (req, res) => {
     await ensureBucketExists(bucketName);
     const client = getR2Client();
     
-    // We request lists of objects. If recursive, we do not pass Delimiter
     const command = new ListObjectsV2Command({
       Bucket: bucketName,
       Prefix: recursive ? '' : prefix,
@@ -370,14 +362,11 @@ app.get('/api/r2/objects', async (req, res) => {
 
     const items: any[] = [];
 
-    // 1. Process Virtual Directories / Subfolders
-    // CommonPrefixes lists folders in the current level
     if (response.CommonPrefixes) {
       for (const commonPrefix of response.CommonPrefixes) {
         if (!commonPrefix.Prefix) continue;
         
-        // E.g. "assets/imagens/" -> parent assets, name imagens
-        const folderPath = commonPrefix.Prefix.replace(/\/$/, ''); // remove trailing slash
+        const folderPath = commonPrefix.Prefix.replace(/\/$/, '');
         const parts = folderPath.split('/');
         const folderName = parts[parts.length - 1];
         const parentPath = parts.slice(0, parts.length - 1).join('/');
@@ -395,26 +384,22 @@ app.get('/api/r2/objects', async (req, res) => {
       }
     }
 
-    // 2. Process Files
     if (response.Contents) {
       for (const obj of response.Contents) {
         if (!obj.Key) continue;
         
-        // S3 standard includes folder creation empty marker keys like "assets/imagens/"
         if (obj.Key === prefix) {
-          continue; // skip current directory marker itself
+          continue;
         }
 
         const parts = obj.Key.split('/');
         const fileName = parts[parts.length - 1];
 
-        // If the key ends with '/', it might be an empty directory marker
         if (obj.Key.endsWith('/')) {
           const folderPath = obj.Key.replace(/\/$/, '');
           const folderName = parts[parts.length - 2] || fileName;
           const parentPath = parts.slice(0, parts.length - 2).join('/');
           
-          // Check if already covered in CommonPrefixes
           if (!items.find((i) => i.path === folderPath)) {
             items.push({
               id: folderPath,
@@ -450,17 +435,11 @@ app.get('/api/r2/objects', async (req, res) => {
 
     res.json(items);
   } catch (error: any) {
-    console.error('Failed to list S3 objects:', {
-      name: error.name,
-      message: error.message,
-      metadata: error.$metadata,
-      stack: error.stack
-    });
+    console.error('Failed to list S3 objects:', error);
     res.status(500).json({ error: error.message || 'Erro ao comunicar com Cloudflare R2.' });
   }
 });
 
-// Download/Preview route proxying standard HTTP GET requests directly to Cloudflare
 app.get('/api/r2/download', async (req, res) => {
   const bucketName = resolveActualBucketName(req.query.bucket as string);
   const key = req.query.key as string;
@@ -488,17 +467,14 @@ app.get('/api/r2/download', async (req, res) => {
       res.setHeader('Content-Length', response.ContentLength);
     }
 
-    // Set preview friendliness or standard file attachment header
     const fileName = key.split('/').pop() || 'file';
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
     res.setHeader('Cache-Control', 'public, max-age=31536000');
 
-    // Pipe stream directly to browser
     const stream = response.Body as any;
     if (stream?.pipe) {
       stream.pipe(res);
     } else {
-      // Browser environment conversion
       const byteArray = await response.Body?.transformToByteArray();
       if (byteArray) {
         res.write(Buffer.from(byteArray));
@@ -513,7 +489,6 @@ app.get('/api/r2/download', async (req, res) => {
   }
 });
 
-// Conversor robusto de stream para Buffer em Node.js compatível com AWS S3 SDK v3
 async function streamToBuffer(stream: any): Promise<Buffer> {
   if (!stream) return Buffer.alloc(0);
   
@@ -529,7 +504,6 @@ async function streamToBuffer(stream: any): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
     const chunks: any[] = [];
     
-    // Check if it's already a buffer
     if (Buffer.isBuffer(stream)) {
       return resolve(stream);
     }
@@ -540,7 +514,6 @@ async function streamToBuffer(stream: any): Promise<Buffer> {
 
     if (typeof stream.on !== 'function') {
       try {
-        // Fallback for async iterable if on is not present
         const runAsyncIterable = async () => {
           const parts: Uint8Array[] = [];
           for await (const chunk of stream) {
@@ -567,7 +540,6 @@ async function streamToBuffer(stream: any): Promise<Buffer> {
   });
 }
 
-// Download multiple files/folders as a ZIP
 app.post('/api/r2/download-zip', async (req, res) => {
   const { bucketName: rawBucketName, paths } = req.body;
   const bucketName = resolveActualBucketName(rawBucketName);
@@ -582,7 +554,6 @@ app.post('/api/r2/download-zip', async (req, res) => {
     await ensureBucketExists(bucketName);
     const client = getR2Client();
 
-    // 1. Collect all actual keys from R2 S3 that match the given paths.
     const allFilesToZip: { key: string; nameInZip: string }[] = [];
 
     for (const itemPath of paths) {
@@ -614,17 +585,13 @@ app.post('/api/r2/download-zip', async (req, res) => {
 
       console.log(`[ZIP DOWNLOAD] S3 returned total of ${contents.length} contents for prefix "${itemPath}"`);
 
-      // Formulate a clean folder prefix to prevent grabbing sister prefixes like "fotos_old" when querying "fotos"
       const folderPrefix = itemPath.endsWith('/') ? itemPath : `${itemPath}/`;
       const filesInFolder = contents.filter(o => o.Key && (o.Key.startsWith(folderPrefix) || o.Key === folderPrefix) && !o.Key.endsWith('/'));
-
-      // Check if there is an exact key match for itemPath representing a simple file
       const exactFile = contents.find(o => o.Key === itemPath && !o.Key.endsWith('/'));
 
       console.log(`[ZIP DOWNLOAD] folderPrefix: "${folderPrefix}", filesInFolder count: ${filesInFolder.length}, exactFile: ${exactFile ? exactFile.Key : 'none'}`);
 
       if (filesInFolder.length > 0) {
-        // It's a folder containing files (potentially nested)
         const pathParts = itemPath.replace(/\/$/, '').split('/');
         const folderBaseName = pathParts[pathParts.length - 1];
 
@@ -636,12 +603,10 @@ app.post('/api/r2/download-zip', async (req, res) => {
           console.log(`[ZIP DOWNLOAD] Added folder file to zip list: key "${obj.Key}" -> zip "${zipName}"`);
         }
       } else if (exactFile && exactFile.Key) {
-        // It's a simple file
         const fileName = itemPath.split('/').pop() || 'file';
         allFilesToZip.push({ key: exactFile.Key, nameInZip: fileName });
         console.log(`[ZIP DOWNLOAD] Added exact file to zip list: key "${exactFile.Key}" -> zip "${fileName}"`);
       } else {
-        // Empty folder or placeholder handling
         const hasFolderPlaceholder = contents.some(o => o.Key === itemPath || o.Key === folderPrefix);
         if (hasFolderPlaceholder || itemPath.endsWith('/')) {
           const pathParts = itemPath.replace(/\/$/, '').split('/');
@@ -660,12 +625,10 @@ app.post('/api/r2/download-zip', async (req, res) => {
       return res.status(404).json({ error: 'Nenhum arquivo encontrado para compactar.' });
     }
 
-    // 2. Fetch all S3 objects in memory FIRST to safely catch failures before returning headers
     const cachedFiles: { name: string; buffer: Buffer }[] = [];
 
     for (const file of allFilesToZip) {
       if (!file.key) {
-        // Empty folder placeholder
         cachedFiles.push({ name: file.nameInZip, buffer: Buffer.alloc(0) });
         continue;
       }
@@ -687,7 +650,6 @@ app.post('/api/r2/download-zip', async (req, res) => {
       console.log(`[ZIP DOWNLOAD] Successfully pre-loaded key "${file.key}" (${buffer.length} bytes)`);
     }
 
-    // 3. Compile the ZIP in memory FIRST to safely catch failures, set Content-Length and prevent stream hangs
     const archive = new ZipArchive({ zlib: { level: 9 } });
     
     const chunks: Buffer[] = [];
@@ -708,7 +670,6 @@ app.post('/api/r2/download-zip', async (req, res) => {
       console.warn('[ZIP DOWNLOAD] Archiver warning:', err);
     });
 
-    // Create a promise to handle complete stream pipeline completion
     const archivePromise = new Promise<void>((resolve, reject) => {
       archive.on('error', (err) => {
         console.error('[ZIP DOWNLOAD] Archiver error:', err);
@@ -719,7 +680,6 @@ app.post('/api/r2/download-zip', async (req, res) => {
       });
     });
 
-    // Append all pre-cached files to the zip
     for (const e of cachedFiles) {
       archive.append(e.buffer, { name: e.name });
     }
@@ -731,7 +691,6 @@ app.post('/api/r2/download-zip', async (req, res) => {
     const zipBuffer = Buffer.concat(chunks);
     console.log(`[ZIP DOWNLOAD] ZIP archive compiled successfully. Size: ${zipBuffer.length} bytes.`);
 
-    // 4. Send Response
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Length', zipBuffer.length);
     res.setHeader('Content-Disposition', 'attachment; filename="r2_backup.zip"');
@@ -744,7 +703,6 @@ app.post('/api/r2/download-zip', async (req, res) => {
   }
 });
 
-// Create folder (by writing empty file with a trailing slash)
 app.post('/api/r2/folder', async (req, res) => {
   const { bucketName: rawBucketName, parentPath, folderName } = req.body;
   const bucketName = resolveActualBucketName(rawBucketName);
@@ -762,7 +720,7 @@ app.post('/api/r2/folder', async (req, res) => {
     const command = new PutObjectCommand({
       Bucket: bucketName,
       Key: folderKey,
-      Body: '', // Empty contents
+      Body: '',
       ContentType: 'application/x-directory',
     });
 
@@ -787,7 +745,6 @@ app.post('/api/r2/folder', async (req, res) => {
   }
 });
 
-// Upload file endpoint using single file multer memory storage
 app.post('/api/r2/upload', upload.single('file'), async (req, res) => {
   const { bucketName: rawBucketName, parentPath } = req.body;
   const bucketName = resolveActualBucketName(rawBucketName);
@@ -837,7 +794,6 @@ app.post('/api/r2/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// Rename file or folder
 app.post('/api/r2/rename', async (req, res) => {
   const { bucketName: rawBucketName, oldPath, newName } = req.body;
   const bucketName = resolveActualBucketName(rawBucketName);
@@ -850,11 +806,7 @@ app.post('/api/r2/rename', async (req, res) => {
     await ensureBucketExists(bucketName);
     const client = getR2Client();
 
-    // S3 doesn't have native "Rename" or "Move". We must copy to new path, then delete original.
     const parts = oldPath.split('/');
-    const isFolder = oldPath.endsWith('/') || !parts[parts.length - 1].includes('.'); // simple heuristic or we could query metadata
-
-    // Let's check listing contents if it is a directory. Better design: query current objects under prefix
     const listCommand = new ListObjectsV2Command({
       Bucket: bucketName,
       Prefix: oldPath,
@@ -862,18 +814,14 @@ app.post('/api/r2/rename', async (req, res) => {
     const listResponse = await client.send(listCommand);
     const contents = listResponse.Contents || [];
 
-    // Let's decide if it's a directory by evaluating list contents with exact folder trailing slashes
     const isActuallyFolder = contents.some((item) => item.Key !== oldPath && item.Key?.startsWith(oldPath + '/')) || oldPath.endsWith('/');
 
     if (isActuallyFolder) {
-      // It's a folder, so rename means copying nested entries
       const oldPrefix = oldPath.endsWith('/') ? oldPath : `${oldPath}/`;
-      // Calculate next prefix prefix
       const parentParts = oldPrefix.replace(/\/$/, '').split('/');
       parentParts[parentParts.length - 1] = newName;
       const newPrefix = parentParts.join('/') + '/';
 
-      // Load all objects that start with oldPrefix
       const objectsCommand = new ListObjectsV2Command({
         Bucket: bucketName,
         Prefix: oldPrefix,
@@ -886,14 +834,12 @@ app.post('/api/r2/rename', async (req, res) => {
         const relativeSuffix = obj.Key.substring(oldPrefix.length);
         const destinationKey = `${newPrefix}${relativeSuffix}`;
 
-        // Copy item to dest
         await client.send(new CopyObjectCommand({
           Bucket: bucketName,
           CopySource: encodeURIComponent(`${bucketName}/${obj.Key}`),
           Key: destinationKey,
         }));
 
-        // Delete original item
         await client.send(new DeleteObjectCommand({
           Bucket: bucketName,
           Key: obj.Key,
@@ -902,12 +848,10 @@ app.post('/api/r2/rename', async (req, res) => {
 
       res.json({ success: true, newPath: newPrefix.replace(/\/$/, '') });
     } else {
-      // It is a simple file.
       const parentParts = oldPath.split('/');
       parentParts[parentParts.length - 1] = newName;
       const destinationKey = parentParts.join('/');
 
-      // S3 CopyObject requires the source to contain the bucket name
       const copyCommand = new CopyObjectCommand({
         Bucket: bucketName,
         CopySource: encodeURIComponent(`${bucketName}/${oldPath}`),
@@ -915,7 +859,6 @@ app.post('/api/r2/rename', async (req, res) => {
       });
       await client.send(copyCommand);
 
-      // Now Delete
       const deleteCommand = new DeleteObjectCommand({
         Bucket: bucketName,
         Key: oldPath,
@@ -930,7 +873,6 @@ app.post('/api/r2/rename', async (req, res) => {
   }
 });
 
-// Copy / Duplicate files or folders (with copy suffix) to a destination folder
 app.post('/api/r2/copy', async (req, res) => {
   const { bucketName: rawBucketName, paths, destinationFolder } = req.body;
   const bucketName = resolveActualBucketName(rawBucketName);
@@ -947,7 +889,6 @@ app.post('/api/r2/copy', async (req, res) => {
     for (const oldPath of paths) {
       if (!oldPath) continue;
 
-      // Classify folders by Listing prefix
       const listCommand = new ListObjectsV2Command({
         Bucket: bucketName,
         Prefix: oldPath,
@@ -958,18 +899,15 @@ app.post('/api/r2/copy', async (req, res) => {
       const isActuallyFolder = contents.some((item) => item.Key !== oldPath && item.Key?.startsWith(oldPath + '/')) || oldPath.endsWith('/');
 
       if (isActuallyFolder) {
-        // Folder Copying
         const oldPrefix = oldPath.endsWith('/') ? oldPath : `${oldPath}/`;
         const pathParts = oldPath.replace(/\/$/, '').split('/');
         const folderName = pathParts[pathParts.length - 1];
         
-        // Target folder with suffix
         const newFolderName = `${folderName} - Cópia`;
         const newPrefix = destDir 
           ? `${destDir.replace(/\/$/, '')}/${newFolderName}/` 
           : `${newFolderName}/`;
 
-        // Get all matching objects in source folder
         const objectsCommand = new ListObjectsV2Command({
           Bucket: bucketName,
           Prefix: oldPrefix,
@@ -989,11 +927,9 @@ app.post('/api/r2/copy', async (req, res) => {
           }));
         }
       } else {
-        // File Copying
         const parts = oldPath.split('/');
         const fileName = parts[parts.length - 1];
 
-        // Format name with copy suffix before extension
         const lastDot = fileName.lastIndexOf('.');
         const nameWithoutExt = lastDot !== -1 ? fileName.substring(0, lastDot) : fileName;
         const ext = lastDot !== -1 ? fileName.substring(lastDot) : '';
@@ -1018,7 +954,6 @@ app.post('/api/r2/copy', async (req, res) => {
   }
 });
 
-// Delete multiple paths (files or directories)
 app.post('/api/r2/delete', async (req, res) => {
   const { bucketName: rawBucketName, paths } = req.body;
   const bucketName = resolveActualBucketName(rawBucketName);
@@ -1031,11 +966,9 @@ app.post('/api/r2/delete', async (req, res) => {
     await ensureBucketExists(bucketName);
     const client = getR2Client();
 
-    // To robustly support deleting folders too, we list objects under each folder and gather ALL explicit file keys to delete
     const keysToDelete: string[] = [];
 
     for (const itemPath of paths) {
-      // We list objects starting with "itemPath/" (folders) as well as the path itself
       const folderPrefix = `${itemPath}/`;
       const listCommand = new ListObjectsV2Command({
         Bucket: bucketName,
@@ -1050,7 +983,6 @@ app.post('/api/r2/delete', async (req, res) => {
         }
       }
 
-      // Also make sure to cover folder placeholder files just in case
       if (!keysToDelete.includes(itemPath)) {
         keysToDelete.push(itemPath);
       }
@@ -1060,11 +992,9 @@ app.post('/api/r2/delete', async (req, res) => {
       }
     }
 
-    // Filter unique keys
     const uniqueKeys = Array.from(new Set(keysToDelete)).filter(Boolean);
 
     if (uniqueKeys.length > 0) {
-      // S3 DeleteObjectsCommand can batch delete up to 1000 items
       const deleteParams = {
         Bucket: bucketName,
         Delete: {
@@ -1084,7 +1014,6 @@ app.post('/api/r2/delete', async (req, res) => {
   }
 });
 
-// Move multiple objects to a targeted folder
 app.post('/api/r2/move', async (req, res) => {
   const { bucketName: rawBucketName, paths, targetPath } = req.body;
   const bucketName = resolveActualBucketName(rawBucketName);
@@ -1100,12 +1029,10 @@ app.post('/api/r2/move', async (req, res) => {
     const client = getR2Client();
 
     for (const sourcePath of paths) {
-      // Find the last file/folder name part
       const sourceParts = sourcePath.split('/');
       const itemName = sourceParts[sourceParts.length - 1];
       const destinationKeyName = `${destPrefix}${itemName}`;
 
-      // List all objects beginning with this path to handle folders correctly
       const listCommand = new ListObjectsV2Command({
         Bucket: bucketName,
         Prefix: sourcePath,
@@ -1113,7 +1040,6 @@ app.post('/api/r2/move', async (req, res) => {
       const listResponse = await client.send(listCommand);
       const objects = listResponse.Contents || [];
 
-      // Determine if really a folder
       const isFolder = objects.some((o) => o.Key !== sourcePath && o.Key?.startsWith(sourcePath + '/')) || sourcePath.endsWith('/');
 
       if (isFolder) {
@@ -1125,21 +1051,18 @@ app.post('/api/r2/move', async (req, res) => {
           const relativeSuffix = obj.Key.substring(oldFolderPrefix.length);
           const destKey = `${newFolderPrefix}${relativeSuffix}`;
 
-          // Copy content
           await client.send(new CopyObjectCommand({
             Bucket: bucketName,
             CopySource: encodeURIComponent(`${bucketName}/${obj.Key}`),
             Key: destKey,
           }));
 
-          // Delete original
           await client.send(new DeleteObjectCommand({
             Bucket: bucketName,
             Key: obj.Key,
           }));
         }
       } else {
-        // Simple file copy and delete
         await client.send(new CopyObjectCommand({
           Bucket: bucketName,
           CopySource: encodeURIComponent(`${bucketName}/${sourcePath}`),
@@ -1160,8 +1083,7 @@ app.post('/api/r2/move', async (req, res) => {
   }
 });
 
-
-// Diagnostic Endpoint to test raw network and R2 connection properties
+// Diagnostic Endpoint
 app.get('/api/test-r2', async (req, res) => {
   const accessKeyId = sanitizeValue(process.env.R2_ACCESS_KEY_ID, '');
   const endpoint = sanitizeValue(process.env.R2_ENDPOINT, '');
@@ -1177,7 +1099,6 @@ app.get('/api/test-r2', async (req, res) => {
   };
 
   try {
-    // 1. Fetch endpoint root
     const rootRes = await fetch(endpoint, { method: 'GET' });
     const rootBody = await rootRes.text();
     diagnostics.fetches.root = {
@@ -1191,7 +1112,6 @@ app.get('/api/test-r2', async (req, res) => {
   }
 
   try {
-    // 2. Fetch endpoint + bucket
     const bucketUrl = `${endpoint.replace(/\/$/, '')}/${bucket}`;
     const bucketRes = await fetch(bucketUrl, { method: 'GET' });
     const bucketBody = await bucketRes.text();
@@ -1209,31 +1129,11 @@ app.get('/api/test-r2', async (req, res) => {
   res.json(diagnostics);
 });
 
-
-// FRONTEND DEV / PRODUCTION MIDDLEWARE INTEGRATIONS
-async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      const vite = await createViteServer({
-        server: { middlewareMode: true },
-        appType: 'spa',
-      });
-      app.use(vite.middlewares);
-    } catch (err) {
-      console.error('Failed to start Vite:', err);
-    }
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
-  // Start Server listening on mandated ports
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server executing live on http://localhost:${PORT}`);
+// Start Server for local development (not Vercel Serverless environment)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Backend Server executing live on http://localhost:${PORT}`);
   });
 }
 
-startServer();
+export default app;

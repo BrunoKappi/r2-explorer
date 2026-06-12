@@ -88,6 +88,11 @@ Crie um arquivo chamado **`.env`** no diretório raiz do projeto (e também dent
    - **Para que serve**: Impede que pessoas não autorizadas acessem e manipulem seus arquivos caso descubram o link público de deploy (como Netlify ou Vercel).
    - **Como configurar**: Defina qualquer senha forte (ex: `uma_senha_forte_aqui`). O frontend solicitará essa senha na primeira abertura do site e a salvará no navegador (`localStorage`) para os próximos acessos.
 
+6. **`ALLOWED_ORIGINS`**:
+   - **O que significa**: Uma lista separada por vírgulas de origens permitidas (CORS) que podem interagir com a API.
+   - **Para que serve**: Evita que domínios não autorizados realizem requisições para os endpoints do seu backend.
+   - **Como configurar**: Insira seus domínios públicos de deploy e o localhost (ex: `https://meu-app.netlify.app,http://localhost:5173`).
+
 ```env
 # Modelo de configuração para o seu arquivo .env
 R2_ACCESS_KEY_ID="sua_chave_de_acesso_aqui"
@@ -95,6 +100,7 @@ R2_SECRET_ACCESS_KEY="sua_chave_secreta_aqui"
 R2_ENDPOINT="https://seu_id_de_conta_aqui.r2.cloudflarestorage.com"
 R2_BUCKET_NAME="bkappi"
 ACCESS_PASSWORD="sua_senha_aqui"
+ALLOWED_ORIGINS="https://bkappi-bucket.netlify.app,https://bucket.bkappi.com,http://localhost:5173,http://localhost:3000"
 ```
 
 > 🛑 **Importante:** Nunca adicione o arquivo `.env` ao seu repositório de controle de versão (como Git). As regras padrão do `.gitignore` já vêm pré-configuradas para omitir arquivos `.env` e `.env.production` das alterações submetidas.

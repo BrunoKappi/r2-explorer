@@ -29,16 +29,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Enable CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : [
+      'https://bkappi-bucket.netlify.app',
+      'https://bucket.bkappi.com',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ];
+
 app.use(cors({
-  origin: [
-    'https://bkappi-bucket.netlify.app',
-    'https://bucket.bkappi.com',
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Access-Password']
 }));
 
 // Enable JSON bodies with limit up to 50MB

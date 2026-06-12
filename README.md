@@ -95,20 +95,20 @@ Crie um arquivo chamado **`.env`** no diretório raiz do projeto (e também dent
 
 7. **`VITE_API_URL`** (Frontend):
    - **O que significa**: A URL pública onde a API do backend está hospedada.
-   - **Para que serve**: Permite que o frontend construído com Vite direcione suas requisições HTTP para um domínio de backend separado e remoto.
-   - **Como configurar**: Defina com o domínio do seu backend (ex: `https://backend-bucket.bkappi.com`). Deixe vazio se o frontend e backend estiverem rodando no mesmo host/porta ou usando proxy.
+   - **Para que serve**: Direciona o frontend a enviar requisições para esse endpoint. Se estiver implantando no **Netlify**, o sistema gerará dinamicamente o arquivo de redirecionamentos (`_redirects`) apontando para esta URL ao executar o build.
+   - **Como configurar**: Defina com o domínio do seu backend (ex: `https://sua-api-r2.herokuapp.com` ou `https://seu-backend-no-vercel.vercel.app`). Deixe vazio para usar a rota de API local.
 
 ```env
 # Modelo de configuração para o seu arquivo .env
 R2_ACCESS_KEY_ID="sua_chave_de_acesso_aqui"
 R2_SECRET_ACCESS_KEY="sua_chave_secreta_aqui"
 R2_ENDPOINT="https://seu_id_de_conta_aqui.r2.cloudflarestorage.com"
-R2_BUCKET_NAME="bkappi"
+R2_BUCKET_NAME="nome_do_seu_bucket"
 ACCESS_PASSWORD="sua_senha_aqui"
-ALLOWED_ORIGINS="https://bkappi-bucket.netlify.app,https://bucket.bkappi.com,http://localhost:5173,http://localhost:3000"
+ALLOWED_ORIGINS="https://seu-app-no-netlify.netlify.app,http://localhost:5173,http://localhost:3000"
 
-# Frontend API Endpoint (opcional se for hospedado de forma separada)
-VITE_API_URL="https://backend-bucket.bkappi.com"
+# Frontend API Endpoint (opcional se hospedado de forma separada)
+VITE_API_URL="https://sua-api-r2-vercel.vercel.app"
 ```
 
 > 🛑 **Importante:** Nunca adicione o arquivo `.env` ao seu repositório de controle de versão (como Git). As regras padrão do `.gitignore` já vêm pré-configuradas para omitir arquivos `.env` e `.env.production` das alterações submetidas.

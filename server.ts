@@ -53,10 +53,11 @@ function sanitizeValue(val: string | undefined, fallback: string = ''): string {
 
 function resolveActualBucketName(bucketName: string | undefined): string {
   const sanitized = sanitizeValue(bucketName);
-  const defaultBucketName = sanitizeValue(process.env.R2_BUCKET_NAME, 'bkappi');
-  // If the bucket name is empty, or equals the custom domain 'cdn.bkappi.com',
-  // map it to the actual default bucket name ('bkappi') so the operation succeeds on Cloudflare R2
-  if (!sanitized || sanitized === 'cdn.bkappi.com') {
+  const defaultBucketName = sanitizeValue(process.env.R2_BUCKET_NAME, '');
+  const customDomain = sanitizeValue(process.env.R2_CUSTOM_DOMAIN, '');
+  // If the bucket name is empty, or equals the custom domain,
+  // map it to the actual default bucket name so the operation succeeds on Cloudflare R2
+  if (!sanitized || (customDomain && sanitized === customDomain)) {
     return defaultBucketName;
   }
   return sanitized;
@@ -85,20 +86,22 @@ async function ensureBucketExists(bucketName: string): Promise<void> {
 }
 
 function getR2Client(): S3Client {
-  const accessKeyId = sanitizeValue(process.env.R2_ACCESS_KEY_ID, '3e6d84ff77a2473658803969f9c1324f');
-  const secretAccessKey = sanitizeValue(process.env.R2_SECRET_ACCESS_KEY, '625dae10a0dba6c7f3fc9490cd5730145e2906178e93ef45bb96fcea432c4d85');
-  let endpoint = sanitizeValue(process.env.R2_ENDPOINT, 'https://ab7c0100f85a82f3ad7f9b0186c9597d.r2.cloudflarestorage.com');
+  const accessKeyId = sanitizeValue(process.env.R2_ACCESS_KEY_ID, '');
+  const secretAccessKey = sanitizeValue(process.env.R2_SECRET_ACCESS_KEY, '');
+  let endpoint = sanitizeValue(process.env.R2_ENDPOINT, '');
 
   console.log('[R2 Config] Loaded endpoint:', endpoint);
 
   // Sanitize endpoint: extract only the protocol and host if it contains any path (e.g. /bkappi)
   try {
-    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
-      const parsed = new URL(endpoint);
-      endpoint = parsed.origin;
-    } else {
-      const parsed = new URL('https://' + endpoint);
-      endpoint = parsed.origin;
+    if (endpoint) {
+      if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+        const parsed = new URL(endpoint);
+        endpoint = parsed.origin;
+      } else {
+        const parsed = new URL('https://' + endpoint);
+        endpoint = parsed.origin;
+      }
     }
   } catch (e) {
     console.error('[R2 Config] Failed parsing endpoint as URL - using as is:', endpoint, e);
@@ -106,9 +109,20 @@ function getR2Client(): S3Client {
 
   // If the endpoint is a custom domain instead of a direct R2/S3 endpoint, we must use the direct endpoint for API operations
   let s3Endpoint = endpoint;
-  if (!s3Endpoint.includes('.r2.cloudflarestorage.com')) {
-    s3Endpoint = 'https://ab7c0100f85a82f3ad7f9b0186c9597d.r2.cloudflarestorage.com';
-    console.log('[R2 Config] Custom domain detected. Routing S3 client requests to fallback API endpoint:', s3Endpoint);
+  if (s3Endpoint && !s3Endpoint.includes('.r2.cloudflarestorage.com')) {
+    const directEndpoint = sanitizeValue(process.env.R2_API_ENDPOINT || process.env.R2_ENDPOINT, '');
+    if (directEndpoint) {
+      try {
+        if (directEndpoint.startsWith('http://') || directEndpoint.startsWith('https://')) {
+          s3Endpoint = new URL(directEndpoint).origin;
+        } else {
+          s3Endpoint = new URL('https://' + directEndpoint).origin;
+        }
+      } catch (e) {
+        s3Endpoint = directEndpoint;
+      }
+    }
+    console.log('[R2 Config] Custom domain detected. Routing S3 client requests to endpoint:', s3Endpoint);
   }
 
   const clientKey = `${accessKeyId}:${secretAccessKey}:${s3Endpoint}`;
@@ -175,17 +189,20 @@ function getMIMETypeFromExtension(fileName: string): string {
  */
 function getPublicUrlForObject(bucketName: string, key: string): string {
   const cleanBucket = sanitizeValue(bucketName);
-  if (cleanBucket === 'bkappi' || cleanBucket === 'cdn.bkappi.com') {
-    return `https://cdn.bkappi.com/${key}`;
+  const defaultBucket = sanitizeValue(process.env.R2_BUCKET_NAME, '');
+  const customDomain = sanitizeValue(process.env.R2_CUSTOM_DOMAIN, '');
+  if (customDomain && (cleanBucket === defaultBucket || cleanBucket === customDomain)) {
+    return `https://${customDomain}/${key}`;
   }
   return `/api/r2/download?bucket=${encodeURIComponent(cleanBucket)}&key=${encodeURIComponent(key)}`;
 }
 
 // Ensure S3 credentials are functional and list buckets to verify (returning only bkappi)
 app.get('/api/r2/buckets', async (req, res) => {
+  const defaultBucketName = sanitizeValue(process.env.R2_BUCKET_NAME, 'r2-bucket');
   res.json([
     {
-      name: 'bkappi',
+      name: defaultBucketName,
       createdAt: new Date().toISOString()
     }
   ]);
@@ -1146,9 +1163,9 @@ app.post('/api/r2/move', async (req, res) => {
 
 // Diagnostic Endpoint to test raw network and R2 connection properties
 app.get('/api/test-r2', async (req, res) => {
-  const accessKeyId = sanitizeValue(process.env.R2_ACCESS_KEY_ID, '3e6d84ff77a2473658803969f9c1324f');
-  const endpoint = sanitizeValue(process.env.R2_ENDPOINT, 'https://ab7c0100f85a82f3ad7f9b0186c9597d.r2.cloudflarestorage.com');
-  const bucket = resolveActualBucketName(process.env.R2_BUCKET_NAME || 'bkappi');
+  const accessKeyId = sanitizeValue(process.env.R2_ACCESS_KEY_ID, '');
+  const endpoint = sanitizeValue(process.env.R2_ENDPOINT, '');
+  const bucket = resolveActualBucketName(process.env.R2_BUCKET_NAME || '');
 
   const diagnostics: any = {
     env_keys: {

@@ -93,6 +93,11 @@ Crie um arquivo chamado **`.env`** no diretório raiz do projeto (e também dent
    - **Para que serve**: Evita que domínios não autorizados realizem requisições para os endpoints do seu backend.
    - **Como configurar**: Insira seus domínios públicos de deploy e o localhost (ex: `https://meu-app.netlify.app,http://localhost:5173`).
 
+7. **`VITE_API_URL`** (Frontend):
+   - **O que significa**: A URL pública onde a API do backend está hospedada.
+   - **Para que serve**: Permite que o frontend construído com Vite direcione suas requisições HTTP para um domínio de backend separado e remoto.
+   - **Como configurar**: Defina com o domínio do seu backend (ex: `https://backend-bucket.bkappi.com`). Deixe vazio se o frontend e backend estiverem rodando no mesmo host/porta ou usando proxy.
+
 ```env
 # Modelo de configuração para o seu arquivo .env
 R2_ACCESS_KEY_ID="sua_chave_de_acesso_aqui"
@@ -101,6 +106,9 @@ R2_ENDPOINT="https://seu_id_de_conta_aqui.r2.cloudflarestorage.com"
 R2_BUCKET_NAME="bkappi"
 ACCESS_PASSWORD="sua_senha_aqui"
 ALLOWED_ORIGINS="https://bkappi-bucket.netlify.app,https://bucket.bkappi.com,http://localhost:5173,http://localhost:3000"
+
+# Frontend API Endpoint (opcional se for hospedado de forma separada)
+VITE_API_URL="https://backend-bucket.bkappi.com"
 ```
 
 > 🛑 **Importante:** Nunca adicione o arquivo `.env` ao seu repositório de controle de versão (como Git). As regras padrão do `.gitignore` já vêm pré-configuradas para omitir arquivos `.env` e `.env.production` das alterações submetidas.

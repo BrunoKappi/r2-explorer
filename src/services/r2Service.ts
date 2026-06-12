@@ -6,6 +6,8 @@
 import { R2Item } from '../types';
 import { useNavigationStore } from '../stores/navigationStore';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 export function getSavedPassword(): string {
   return localStorage.getItem('r2_access_password') || '';
 }
@@ -20,7 +22,8 @@ async function fetchWithAuth(url: string, init?: RequestInit): Promise<Response>
   if (pwd) {
     headers.set('X-Access-Password', pwd);
   }
-  return fetch(url, {
+  const finalUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
+  return fetch(finalUrl, {
     ...init,
     headers,
   });
@@ -32,7 +35,7 @@ export const r2Service = {
    */
   async verifyPassword(password: string): Promise<boolean> {
     try {
-      const res = await fetch('/api/r2/buckets', {
+      const res = await fetch(`${API_BASE_URL}/api/r2/buckets`, {
         headers: {
           'X-Access-Password': password,
         },
@@ -78,7 +81,7 @@ export const r2Service = {
       if (item.publicUrl && item.publicUrl.startsWith('/api/r2/download')) {
         return {
           ...item,
-          publicUrl: `${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
+          publicUrl: `${API_BASE_URL}${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
         };
       }
       return item;
@@ -129,7 +132,7 @@ export const r2Service = {
       if (item.publicUrl && item.publicUrl.startsWith('/api/r2/download')) {
         return {
           ...item,
-          publicUrl: `${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
+          publicUrl: `${API_BASE_URL}${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
         };
       }
       return item;
@@ -143,7 +146,7 @@ export const r2Service = {
 
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/r2/upload');
+        xhr.open('POST', `${API_BASE_URL}/api/r2/upload`);
 
         const pwd = getSavedPassword();
         if (pwd) {
@@ -321,7 +324,7 @@ export const r2Service = {
       if (item.publicUrl && item.publicUrl.startsWith('/api/r2/download')) {
         return {
           ...item,
-          publicUrl: `${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
+          publicUrl: `${API_BASE_URL}${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
         };
       }
       return item;
@@ -365,7 +368,7 @@ export const r2Service = {
    */
   async downloadFile(path: string): Promise<void> {
     const bucket = useNavigationStore.getState().activeBucketName || 'bkappi';
-    const downloadUrl = `/api/r2/download?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(path)}`;
+    const downloadUrl = `${API_BASE_URL}/api/r2/download?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(path)}`;
     
     const response = await fetchWithAuth(downloadUrl);
     if (!response.ok) {

@@ -6,12 +6,48 @@
 import { R2Item } from '../types';
 import { useNavigationStore } from '../stores/navigationStore';
 
+export function getSavedPassword(): string {
+  return localStorage.getItem('r2_access_password') || '';
+}
+
+export function savePassword(pwd: string): void {
+  localStorage.setItem('r2_access_password', pwd);
+}
+
+async function fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
+  const pwd = getSavedPassword();
+  const headers = new Headers(init?.headers);
+  if (pwd) {
+    headers.set('X-Access-Password', pwd);
+  }
+  return fetch(url, {
+    ...init,
+    headers,
+  });
+}
+
 export const r2Service = {
+  /**
+   * Verifies if a password is valid
+   */
+  async verifyPassword(password: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/r2/buckets', {
+        headers: {
+          'X-Access-Password': password,
+        },
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
   /**
    * Lists buckets in the account
    */
   async listBuckets(): Promise<{ name: string; createdAt: string }[]> {
-    const res = await fetch('/api/r2/buckets');
+    const res = await fetchWithAuth('/api/r2/buckets');
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Não foi possível listar os buckets no Cloudflare R2.');
@@ -32,12 +68,21 @@ export const r2Service = {
     const url = search
       ? `/api/r2/objects?bucket=${encodeURIComponent(bucket)}&search=${encodeURIComponent(search)}`
       : `/api/r2/objects?bucket=${encodeURIComponent(bucket)}&prefix=${encodeURIComponent(currentPath)}${flatMode ? '&flat=true' : ''}`;
-    const res = await fetch(url);
+    const res = await fetchWithAuth(url);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Erro ao carregar objetos do bucket R2.');
     }
-    return res.json();
+    const items: R2Item[] = await res.json();
+    return items.map((item) => {
+      if (item.publicUrl && item.publicUrl.startsWith('/api/r2/download')) {
+        return {
+          ...item,
+          publicUrl: `${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
+        };
+      }
+      return item;
+    });
   },
 
   /**
@@ -48,7 +93,7 @@ export const r2Service = {
     if (!bucket) {
       throw new Error('Selecione um bucket primeiro.');
     }
-    const res = await fetch('/api/r2/folder', {
+    const res = await fetchWithAuth('/api/r2/folder', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -80,6 +125,16 @@ export const r2Service = {
       throw new Error('Nenhum bucket selecionado para upload.');
     }
 
+    const appendPwdToItem = (item: R2Item): R2Item => {
+      if (item.publicUrl && item.publicUrl.startsWith('/api/r2/download')) {
+        return {
+          ...item,
+          publicUrl: `${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
+        };
+      }
+      return item;
+    };
+
     if (fileObj instanceof File) {
       const formData = new FormData();
       formData.append('file', fileObj);
@@ -89,6 +144,11 @@ export const r2Service = {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/r2/upload');
+
+        const pwd = getSavedPassword();
+        if (pwd) {
+          xhr.setRequestHeader('X-Access-Password', pwd);
+        }
 
         if (onProgress) {
           xhr.upload.onprogress = (event) => {
@@ -103,7 +163,7 @@ export const r2Service = {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
               const data = JSON.parse(xhr.responseText);
-              resolve(data.file);
+              resolve(appendPwdToItem(data.file));
             } catch {
               reject(new Error('Resposta inválida do servidor.'));
             }
@@ -126,7 +186,7 @@ export const r2Service = {
     }
 
     // Default raw metadata upload case if fallback is needed
-    const res = await fetch('/api/r2/upload', {
+    const res = await fetchWithAuth('/api/r2/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -142,7 +202,7 @@ export const r2Service = {
       throw new Error(err.error || 'Falha ao processar upload.');
     }
     const data = await res.json();
-    return data.file;
+    return appendPwdToItem(data.file);
   },
 
   /**
@@ -153,7 +213,7 @@ export const r2Service = {
     if (!bucket) {
       throw new Error('Bucket não selecionado.');
     }
-    const res = await fetch('/api/r2/rename', {
+    const res = await fetchWithAuth('/api/r2/rename', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -179,7 +239,7 @@ export const r2Service = {
     if (!bucket) {
       throw new Error('Nenhum bucket selecionado.');
     }
-    const res = await fetch('/api/r2/delete', {
+    const res = await fetchWithAuth('/api/r2/delete', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -203,7 +263,7 @@ export const r2Service = {
     if (!bucket) {
       throw new Error('Bucket não selecionado.');
     }
-    const res = await fetch('/api/r2/move', {
+    const res = await fetchWithAuth('/api/r2/move', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -235,7 +295,7 @@ export const r2Service = {
     if (!bucket) {
       return [];
     }
-    const res = await fetch(`/api/r2/objects?bucket=${encodeURIComponent(bucket)}&recursive=true`);
+    const res = await fetchWithAuth(`/api/r2/objects?bucket=${encodeURIComponent(bucket)}&recursive=true`);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Não foi possível ler diretórios do bucket R2.');
@@ -251,12 +311,21 @@ export const r2Service = {
     if (!bucket) {
       return [];
     }
-    const res = await fetch(`/api/r2/objects?bucket=${encodeURIComponent(bucket)}&prefix=&flat=true`);
+    const res = await fetchWithAuth(`/api/r2/objects?bucket=${encodeURIComponent(bucket)}&prefix=&flat=true`);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Não foi possível ler todos os arquivos para estatísticas.');
     }
-    return res.json();
+    const items: R2Item[] = await res.json();
+    return items.map((item) => {
+      if (item.publicUrl && item.publicUrl.startsWith('/api/r2/download')) {
+        return {
+          ...item,
+          publicUrl: `${item.publicUrl}&pwd=${encodeURIComponent(getSavedPassword())}`,
+        };
+      }
+      return item;
+    });
   },
 
   /**
@@ -264,7 +333,7 @@ export const r2Service = {
    */
   async downloadZip(paths: string[]): Promise<void> {
     const bucket = useNavigationStore.getState().activeBucketName || 'bkappi';
-    const response = await fetch('/api/r2/download-zip', {
+    const response = await fetchWithAuth('/api/r2/download-zip', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -298,7 +367,7 @@ export const r2Service = {
     const bucket = useNavigationStore.getState().activeBucketName || 'bkappi';
     const downloadUrl = `/api/r2/download?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(path)}`;
     
-    const response = await fetch(downloadUrl);
+    const response = await fetchWithAuth(downloadUrl);
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || 'Não foi possível baixar o arquivo.');
@@ -324,7 +393,7 @@ export const r2Service = {
       throw new Error('Nenhum bucket selecionado.');
     }
 
-    const response = await fetch('/api/r2/copy', {
+    const response = await fetchWithAuth('/api/r2/copy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

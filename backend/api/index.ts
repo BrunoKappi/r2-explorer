@@ -195,6 +195,23 @@ function getPublicUrlForObject(bucketName: string, key: string): string {
 }
 
 // Routes
+const ACCESS_PASSWORD = sanitizeValue(process.env.ACCESS_PASSWORD, '');
+
+function checkAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (!ACCESS_PASSWORD) {
+    return next();
+  }
+  const clientPassword = sanitizeValue(
+    (req.headers['x-access-password'] as string) || (req.query.pwd as string)
+  );
+  if (clientPassword !== ACCESS_PASSWORD) {
+    return res.status(401).json({ error: 'Acesso não autorizado. Senha incorreta.' });
+  }
+  next();
+}
+
+app.use('/api/r2', checkAuth);
+
 app.get('/api/r2/buckets', async (req, res) => {
   const defaultBucketName = sanitizeValue(process.env.R2_BUCKET_NAME, 'r2-bucket');
   res.json([

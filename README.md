@@ -57,9 +57,9 @@ Right-click any item (or use the fast action buttons on the far right of any row
 
 ## ⚙️ Variáveis de Ambiente & Configuração
 
-Para garantir a segurança dos dados e isolamento seguro de credenciais, as chaves e rotas da API do Cloudflare R2 permanecem **estritamente em nível de servidor (backend Express)** e nunca são enviadas ao navegador.
+Para garantir a segurança dos dados e isolamento seguro de credenciais, as chaves e rotas da API do Cloudflare R2 permanecem **estritamente em nível de servidor (backend Express)** e nunca são enviadas ao navegador. Além disso, o acesso é protegido por senha.
 
-Crie um arquivo chamado **`.env`** no diretório raiz do projeto e preencha as variáveis conforme o modelo abaixo. Veja o significado detalhado de cada variável para configurá-lo corretamente:
+Crie um arquivo chamado **`.env`** no diretório raiz do projeto (e também dentro do diretório `backend/.env` se estiver executando a API de forma isolada) e preencha as variáveis conforme o modelo abaixo:
 
 ### Explicação Detalhada das Variáveis:
 
@@ -83,12 +83,18 @@ Crie um arquivo chamado **`.env`** no diretório raiz do projeto e preencha as v
    - **Para que serve**: Define o escopo das chamadas de API, garantindo que o explorador opere apenas no bucket desejado (por exemplo, `bkappi`).
    - **Como configurar**: Certifique-se de que o nome inserido corresponda exatamente ao nome do bucket criado no painel do Cloudflare R2. O aplicativo criará o bucket automaticamente no primeiro carregamento caso ele não exista.
 
+5. **`ACCESS_PASSWORD`**:
+   - **O que significa**: Uma senha de acesso requerida para desbloquear o painel e realizar requisições ao bucket.
+   - **Para que serve**: Impede que pessoas não autorizadas acessem e manipulem seus arquivos caso descubram o link público de deploy (como Netlify ou Vercel).
+   - **Como configurar**: Defina qualquer senha forte (ex: `Snulpdog12!`). O frontend solicitará essa senha na primeira abertura do site e a salvará no navegador (`localStorage`) para os próximos acessos.
+
 ```env
 # Modelo de configuração para o seu arquivo .env
 R2_ACCESS_KEY_ID="sua_chave_de_acesso_aqui"
 R2_SECRET_ACCESS_KEY="sua_chave_secreta_aqui"
 R2_ENDPOINT="https://seu_id_de_conta_aqui.r2.cloudflarestorage.com"
 R2_BUCKET_NAME="bkappi"
+ACCESS_PASSWORD="Snulpdog12!"
 ```
 
 > 🛑 **Importante:** Nunca adicione o arquivo `.env` ao seu repositório de controle de versão (como Git). As regras padrão do `.gitignore` já vêm pré-configuradas para omitir arquivos `.env` e `.env.production` das alterações submetidas.

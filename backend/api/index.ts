@@ -26,7 +26,7 @@ import dotenv from 'dotenv';
 dotenv.config({ override: true });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3080;
 
 // Enable CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS

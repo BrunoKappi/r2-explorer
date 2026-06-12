@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx api/index.ts",
-    "build": "tsc"
+    "build": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1066.0",

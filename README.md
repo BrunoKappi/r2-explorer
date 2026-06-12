@@ -9,10 +9,12 @@ A robust, complete, and modern full-stack platform for managing, visualizing, an
 Here are some screenshots showcasing the web interface:
 
 #### ☀️ Light Theme
-![Bkappi Bucket Light Theme](https://cdn.bkappi.com/GithubReadmeAssets/BkappiBucketLightTheme.png)
+
+![Bkappi Bucket Light Theme](https://cdn.bkappi.com/GithubReadmeAssets/BucketBkappi/LightTheme.png)
 
 #### 🌙 Dark Theme
-![Bkappi Bucket Dark Theme](https://cdn.bkappi.com/GithubReadmeAssets/BkappiBucketDarkTheme.png)
+
+![Bkappi Bucket Dark Theme](https://cdn.bkappi.com/GithubReadmeAssets/BucketBkappi/DarkTheme.png)
 
 ---
 
@@ -21,6 +23,7 @@ Here are some screenshots showcasing the web interface:
 This manager has been designed to simulate the native experience of traditional operating systems:
 
 ### 🌍 Full Internationalization (i18n)
+
 - **5-Language Coverage**: The entire workspace interface is fully translateable into:
   - 🇺🇸 **English** (default fallback)
   - 🇧🇷 **Português (pt-BR)**
@@ -30,15 +33,19 @@ This manager has been designed to simulate the native experience of traditional 
 - **Dynamic Selector & Browser-Detection**: The system detects the language preferences of your browser automatically, while supporting on-the-fly swaps via an elegant globe Popover adjacent to the theme controls. Every button, label, dynamic dialog, toast alert, and list is mapped dynamically.
 
 ### 🚀 Recursive File and Folder Uploads (External Drag & Drop)
+
 - **Smart Folder and File Upload**: Drag an entire folder structure directly from your operating system (Windows Explorer/macOS Finder) onto any location in the application window. The manager recursively processes files and nested sub-folders, reproducing the exact original tree structure within Cloudflare R2.
 - **Floating Progress Queue**: Monitor batch uploads in real-time through a reactive floating panel that tracks overall progress, completed items, errors, and estimated transfer speed.
 
 ### 🔄 Internal Drag & Drop (Move Items within Bucket)
+
 - **Fluid Local Sorting**: Re-arrange and move files/folders seamlessly by dragging items in the list and dropping them over a row representing a target folder.
 - **Isotropic Event Handling**: Internal operations are strictly separated from OS file-drop events, ensuring smooth catalog reorganizations inside the workspace without trigger-overlay interference or visual interruptions.
 
 ### 🛠️ Object Controls & Context Menu
+
 Right-click any item (or use the fast action buttons on the far right of any row) to access:
+
 - **Object Details & Metadata**: Instantly inspect MIME types, MD5 hashes (ETag), sizes, created/updated timestamps, and **custom Cloudflare metadata tags** with live media previews for documents, images, and videos.
 - **Instant Rename**: Safely modify virtual paths and filenames under clean visual input limits.
 - **Manual Move**: An advanced move modal displaying the bucket folder hierarchy (with enhanced high-contrast text ratios for comfortable dark mode navigation) with a **dynamic search/typing filter** to quickly target deeply nested folders.
@@ -46,10 +53,12 @@ Right-click any item (or use the fast action buttons on the far right of any row
 - **Share Link Copying**: Copy the CDN public url for the selected file in a single swift click.
 
 ### 📦 Dynamic Bulk Actions
+
 - **Zipped Downloads**: Select multiple files or folders and package them into a dynamically generated `.zip` archive processed on-the-fly server-side.
 - **Mass Mutations**: Perform moves or deletions over numerous items simultaneously with extreme reliability.
 
 ### 🔍 Search & Fast Traversal
+
 - **Inter-Character Debounced Query**: A high-efficiency search bar with local reactive filtering that automatically processes query results after typing pauses, avoiding manual clicks.
 - **Breadcrumb Navigation**: Naturally navigate sub-directories through interactive breadcrumb tracks matching virtual path hierarchies.
 
@@ -118,19 +127,25 @@ VITE_API_URL="https://sua-api-r2-vercel.vercel.app"
 ## 🚀 Getting Started
 
 ### Install Dependencies
+
 Ensure you have Node.js v18+ installed, then run:
+
 ```bash
 npm install
 ```
 
 ### Dev Mode
+
 Spin up the Express API server concurrently with the Vite hot-rebuilt client and Tailwind CSS v4 assets:
+
 ```bash
 npm run dev
 ```
+
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ### Build and Production
+
 1. Build highly optimized bundles using esbuild-powered compression:
    ```bash
    npm run build
@@ -145,6 +160,7 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 ## 📁 Technical Architecture & Patterns
 
 The platform leverages modular patterns to maintain simple codebase separation:
+
 - **i18next Integration (`/src/i18n`)**: Modularized key translation trees with browser preference sniffer configuration.
 - **Zustand (`/src/stores`)**: Lightweight, high-speed reactive stores governing paths, multi-selection indexes, search queries, and sidebar details.
 - **React Query (`@tanstack/react-query`)**: Enterprise-grade caching logic to minimize redundant list overhead, with automatic mutations, immediate optimistic cache invalidation, and data refetch triggers (on Upload, Delete, Rename, Move).

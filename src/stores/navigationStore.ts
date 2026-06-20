@@ -86,6 +86,15 @@ interface NavigationState {
   toggleTheme: () => void;
 }
 
+const getSavedClipboard = (): string[] => {
+  try {
+    const saved = localStorage.getItem('r2_explorer_clipboard');
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
 export const useNavigationStore = create<NavigationState>((set) => ({
   currentPath: '',
   selectedPaths: [],
@@ -95,7 +104,7 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   viewMode: 'list',
   buckets: [],
   activeBucketName: 'bkappi',
-  clipboardPaths: [],
+  clipboardPaths: getSavedClipboard(),
   viewPrefixesAsFolders: localStorage.getItem('viewPrefixesAsFolders') !== 'false',
   skippedUploads: null,
   sortColumn: 'name',
@@ -270,13 +279,24 @@ export const useNavigationStore = create<NavigationState>((set) => ({
     }),
 
   copySelectionToClipboard: () =>
-    set((state) => ({
-      clipboardPaths: [...state.selectedPaths],
-    })),
+    set((state) => {
+      const paths = [...state.selectedPaths];
+      try {
+        localStorage.setItem('r2_explorer_clipboard', JSON.stringify(paths));
+      } catch (err) {
+        console.error('Failed to save clipboard to localStorage', err);
+      }
+      return { clipboardPaths: paths };
+    }),
 
   clearClipboard: () =>
-    set({
-      clipboardPaths: [],
+    set(() => {
+      try {
+        localStorage.removeItem('r2_explorer_clipboard');
+      } catch (err) {
+        console.error('Failed to clear clipboard in localStorage', err);
+      }
+      return { clipboardPaths: [] };
     }),
 
   setViewPrefixesAsFolders: (val: boolean) => {
@@ -311,3 +331,17 @@ export const useNavigationStore = create<NavigationState>((set) => ({
       return { theme: nextTheme };
     }),
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'r2_explorer_clipboard') {
+      try {
+        const paths = e.newValue ? JSON.parse(e.newValue) : [];
+        useNavigationStore.setState({ clipboardPaths: paths });
+      } catch (err) {
+        console.error('Failed to parse clipboard from storage event', err);
+      }
+    }
+  });
+}
+

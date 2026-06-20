@@ -923,8 +923,10 @@ app.post('/api/r2/copy', async (req, res) => {
         const oldPrefix = oldPath.endsWith('/') ? oldPath : `${oldPath}/`;
         const pathParts = oldPath.replace(/\/$/, '').split('/');
         const folderName = pathParts[pathParts.length - 1];
+        const oldParent = pathParts.slice(0, pathParts.length - 1).join('/');
+        const isSameFolder = oldParent.replace(/\/$/, '') === destDir.replace(/\/$/, '');
         
-        const newFolderName = `${folderName} - Cópia`;
+        const newFolderName = isSameFolder ? `${folderName}_copy` : folderName;
         const newPrefix = destDir 
           ? `${destDir.replace(/\/$/, '')}/${newFolderName}/` 
           : `${newFolderName}/`;
@@ -950,11 +952,13 @@ app.post('/api/r2/copy', async (req, res) => {
       } else {
         const parts = oldPath.split('/');
         const fileName = parts[parts.length - 1];
+        const oldParent = parts.slice(0, parts.length - 1).join('/');
+        const isSameFolder = oldParent.replace(/\/$/, '') === destDir.replace(/\/$/, '');
 
         const lastDot = fileName.lastIndexOf('.');
         const nameWithoutExt = lastDot !== -1 ? fileName.substring(0, lastDot) : fileName;
         const ext = lastDot !== -1 ? fileName.substring(lastDot) : '';
-        const newFileName = `${nameWithoutExt} - Cópia${ext}`;
+        const newFileName = isSameFolder ? `${nameWithoutExt}_copy${ext}` : fileName;
 
         const destinationKey = destDir
           ? `${destDir.replace(/\/$/, '')}/${newFileName}`

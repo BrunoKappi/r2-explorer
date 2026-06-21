@@ -13,7 +13,14 @@ export const resources = {
         addFolder: "Add folder",
         reload: "Reload files",
         folderModeOnly: "Only available in folder mode",
-        newFolder: "New folder"
+        newFolder: "New folder",
+        viewMode: "View layout",
+        viewModeDetails: "Details",
+        viewModeSmall: "Small icons",
+        viewModeMedium: "Medium icons",
+        viewModeLarge: "Large icons",
+        viewModeExtraLarge: "Extra large icons",
+        viewModeMosaic: "Mosaic"
       },
       breadcrumbs: {
         root: "Root"
@@ -194,7 +201,14 @@ export const resources = {
         addFolder: "Criar pasta",
         reload: "Recarregar arquivos",
         folderModeOnly: "Disponível apenas no modo pasta",
-        newFolder: "Nova pasta"
+        newFolder: "Nova pasta",
+        viewMode: "Visualização",
+        viewModeDetails: "Detalhes",
+        viewModeSmall: "Ícones pequenos",
+        viewModeMedium: "Ícones médios",
+        viewModeLarge: "Ícones grandes",
+        viewModeExtraLarge: "Ícones extra grandes",
+        viewModeMosaic: "Mosaico"
       },
       breadcrumbs: {
         root: "Raiz"
@@ -375,7 +389,14 @@ export const resources = {
         addFolder: "Nueva carpeta",
         reload: "Recargar archivos",
         folderModeOnly: "Solo disponible en modo carpeta",
-        newFolder: "Nueva carpeta"
+        newFolder: "Nueva carpeta",
+        viewMode: "Vista",
+        viewModeDetails: "Detalles",
+        viewModeSmall: "Iconos pequeños",
+        viewModeMedium: "Iconos medianos",
+        viewModeLarge: "Iconos grandes",
+        viewModeExtraLarge: "Iconos muy grandes",
+        viewModeMosaic: "Mosaico"
       },
       breadcrumbs: {
         root: "Raíz"
@@ -556,7 +577,14 @@ export const resources = {
         addFolder: "Ordner hinzufügen",
         reload: "Dateien neu laden",
         folderModeOnly: "Nur im Ordnermodus verfügbar",
-        newFolder: "Neuer Ordner"
+        newFolder: "Neuer Ordner",
+        viewMode: "Layout anzeigen",
+        viewModeDetails: "Details",
+        viewModeSmall: "Kleine Symbole",
+        viewModeMedium: "Mittelgroße Symbole",
+        viewModeLarge: "Große Symbole",
+        viewModeExtraLarge: "Sehr große Symbole",
+        viewModeMosaic: "Mosaik"
       },
       breadcrumbs: {
         root: "Wurzel"
@@ -737,7 +765,14 @@ export const resources = {
         addFolder: "Créer un dossier",
         reload: "Recharger la liste",
         folderModeOnly: "Uniquement accessible en mode dossier",
-        newFolder: "Nouveau dossier"
+        newFolder: "Nouveau dossier",
+        viewMode: "Affichage",
+        viewModeDetails: "Détails",
+        viewModeSmall: "Petites icônes",
+        viewModeMedium: "Icônes moyennes",
+        viewModeLarge: "Grandes icônes",
+        viewModeExtraLarge: "Très grandes icônes",
+        viewModeMosaic: "Mosaïque"
       },
       breadcrumbs: {
         root: "Racine"

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { R2Item } from '../../types';
 import FileRow from '../FileRow';
+import FileGridCard from '../FileGridCard';
 
 interface FileExplorerTableProps {
   sortedDisplayItems: R2Item[];
@@ -25,6 +26,7 @@ export function FileExplorerTable({ sortedDisplayItems, allVisiblePaths, allObje
     sortColumn,
     sortDirection,
     setSort,
+    viewMode,
   } = useNavigationStore();
 
   const areAllSelected =
@@ -64,6 +66,38 @@ export function FileExplorerTable({ sortedDisplayItems, allVisiblePaths, allObje
       </th>
     );
   };
+
+  if (viewMode !== 'details') {
+    const isMosaic = viewMode === 'mosaic';
+    return (
+      <div 
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            clearSelection();
+          }
+        }}
+        className={isMosaic
+          ? "p-5 flex flex-row flex-wrap gap-4 transition-all duration-150 select-none"
+          : `p-5 grid transition-all duration-150 select-none ${
+              viewMode === 'icons-sm' ? 'grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2.5' :
+              viewMode === 'icons-md' ? 'grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3' :
+              viewMode === 'icons-lg' ? 'grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4' :
+              'grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5' // icons-xl
+            }`
+        }
+      >
+        {sortedDisplayItems.map((item) => (
+          <FileGridCard 
+            key={item.id} 
+            item={item} 
+            viewMode={viewMode}
+            allVisiblePaths={allVisiblePaths} 
+            allObjects={allObjects} 
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full relative select-none">

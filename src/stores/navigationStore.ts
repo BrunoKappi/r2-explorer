@@ -20,7 +20,7 @@ interface NavigationState {
   lastSelectedPath: string | null; // Keeps track of the last clicked path for Shift range-selection
   searchQuery: string; // Global or local search string
   activeUploads: UploadProgress[]; // Current active mock uploads
-  viewMode: 'list' | 'grid'; // View preference
+  viewMode: 'details' | 'icons-sm' | 'icons-md' | 'icons-lg' | 'icons-xl' | 'mosaic'; // View preference
   buckets: { name: string; createdAt: string }[]; // Cloudflare R2 Buckets in account
   activeBucketName: string | null; // Currently explored bucket name
 
@@ -35,7 +35,7 @@ interface NavigationState {
   // Navigation Actions
   setCurrentPath: (path: string) => void;
   setSearchQuery: (query: string) => void;
-  setViewMode: (mode: 'list' | 'grid') => void;
+  setViewMode: (mode: 'details' | 'icons-sm' | 'icons-md' | 'icons-lg' | 'icons-xl' | 'mosaic') => void;
   setBuckets: (buckets: { name: string; createdAt: string }[]) => void;
   setActiveBucketName: (bucketName: string | null) => void;
   
@@ -101,7 +101,7 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   lastSelectedPath: null,
   searchQuery: '',
   activeUploads: [],
-  viewMode: 'list',
+  viewMode: (localStorage.getItem('viewMode') as NavigationState['viewMode']) || 'details',
   buckets: [],
   activeBucketName: 'bkappi',
   clipboardPaths: getSavedClipboard(),
@@ -135,7 +135,10 @@ export const useNavigationStore = create<NavigationState>((set) => ({
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  setViewMode: (mode) => set({ viewMode: mode }),
+  setViewMode: (mode) => {
+    localStorage.setItem('viewMode', mode);
+    set({ viewMode: mode });
+  },
 
   setBuckets: (buckets) => set({ buckets }),
 

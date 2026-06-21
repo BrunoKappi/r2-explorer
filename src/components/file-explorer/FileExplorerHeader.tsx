@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Info, Upload, Plus, RefreshCw, BarChart3, Sun, Moon, Globe, Check } from 'lucide-react';
+import { Search, Info, Upload, Plus, RefreshCw, BarChart3, Sun, Moon, Globe, Check, LayoutGrid, List, Grid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '../../stores/navigationStore';
 import Breadcrumbs from '../../features/bucket-navigation/Breadcrumbs';
@@ -39,10 +39,15 @@ export function FileExplorerHeader({
     openDialog,
     theme,
     toggleTheme,
+    viewMode,
+    setViewMode,
   } = useNavigationStore();
 
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -53,6 +58,25 @@ export function FileExplorerHeader({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [langOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (viewMenuOpen && viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
+        setViewMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [viewMenuOpen]);
+
+  const viewModes = [
+    { code: 'details', label: t('header.viewModeDetails'), icon: <List size={13.5} /> },
+    { code: 'icons-sm', label: t('header.viewModeSmall'), icon: <LayoutGrid size={13.5} /> },
+    { code: 'icons-md', label: t('header.viewModeMedium'), icon: <LayoutGrid size={14.5} /> },
+    { code: 'icons-lg', label: t('header.viewModeLarge'), icon: <LayoutGrid size={16} /> },
+    { code: 'icons-xl', label: t('header.viewModeExtraLarge'), icon: <LayoutGrid size={17.5} /> },
+    { code: 'mosaic', label: t('header.viewModeMosaic'), icon: <Grid size={14.5} /> },
+  ] as const;
 
   // Find active lang object
   const currentLang = languages.find(l => l.code === i18n.language) 
@@ -188,6 +212,46 @@ export function FileExplorerHeader({
             <Plus size={13} className="stroke-[2.5]" />
             <span>{t('header.addFolder')}</span>
           </button>
+
+          {/* View Mode Popover Dropdown Selector */}
+          <div className="relative" ref={viewMenuRef}>
+            <button
+              type="button"
+              onClick={() => setViewMenuOpen(!viewMenuOpen)}
+              className="h-8.5 px-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 hover:border-zinc-300 dark:hover:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-400 hover:text-zinc-955 dark:hover:text-white rounded-md flex items-center gap-1.5 transition-all cursor-pointer shadow-3xs shrink-0"
+              title={t('header.viewMode')}
+            >
+              {viewMode === 'details' ? <List size={13.5} className="text-zinc-500 dark:text-zinc-400" /> : <LayoutGrid size={13.5} className="text-zinc-500 dark:text-zinc-400" />}
+              <span>{t('header.viewMode')}</span>
+            </button>
+
+            {viewMenuOpen && (
+              <div className="absolute right-0 mt-1.5 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl py-1.5 z-50 text-xs font-sans text-zinc-750 dark:text-zinc-200 animate-in fade-in zoom-in-95 duration-100">
+                {viewModes.map((mode) => (
+                  <button
+                    key={mode.code}
+                    onClick={() => {
+                      setViewMode(mode.code);
+                      setViewMenuOpen(false);
+                    }}
+                    className="flex items-center justify-between w-full text-left px-3 py-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-955 dark:hover:text-white transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-400 dark:text-zinc-500 shrink-0">
+                        {mode.icon}
+                      </span>
+                      <span className={viewMode === mode.code ? 'font-semibold text-zinc-955 dark:text-white' : ''}>
+                        {mode.label}
+                      </span>
+                    </div>
+                    {viewMode === mode.code && (
+                      <Check size={13} className="text-blue-500 dark:text-blue-400 shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <button
             onClick={onRefresh}

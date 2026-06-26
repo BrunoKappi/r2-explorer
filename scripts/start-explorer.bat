@@ -1,5 +1,6 @@
 @echo off
 title R2 Explorer Runner
+cd /d "%~dp0.."
 echo Starting R2 Explorer services on custom ports...
 
 :: Start Backend in a new window (Port 3080)

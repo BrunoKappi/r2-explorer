@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>R2 Explorer — Full-Stack Cloudflare R2 Storage Manager</title>
+  <meta name="title" content="R2 Explorer — Full-Stack Cloudflare R2 Storage Manager" />
+  <meta name="description" content="R2 Explorer is a modern, open-source full-stack platform for managing Cloudflare R2 storage buckets. Features drag-and-drop uploads, multi-language support, dark mode, file statistics, ZIP downloads, and more." />
+  <meta name="keywords" content="Cloudflare R2, R2 Explorer, S3 storage manager, object storage, bucket manager, Cloudflare R2 UI, R2 dashboard, file explorer, cloud storage manager, open source, Bruno Kappi" />
+  <meta name="author" content="Bruno Kappi" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://github.com/BrunoKappi/r2-explorer" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://github.com/BrunoKappi/r2-explorer" />
+  <meta property="og:title" content="R2 Explorer — Full-Stack Cloudflare R2 Storage Manager" />
+  <meta property="og:description" content="A modern, open-source platform for managing Cloudflare R2 storage. Drag-and-drop uploads, ZIP downloads, multi-language support, dark mode, bucket statistics and more." />
+  <meta property="og:image" content="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/FoldersViewDark.png" />
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://github.com/BrunoKappi/r2-explorer" />
+  <meta property="twitter:title" content="R2 Explorer — Full-Stack Cloudflare R2 Storage Manager" />
+  <meta property="twitter:description" content="A modern, open-source platform for managing Cloudflare R2 storage." />
+  <meta property="twitter:image" content="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/FoldersViewDark.png" />
+  <link rel="icon" type="image/x-icon" href="https://cdn.bkappi.com/ProjectsAssets/BkappiGeneral/bkappiIcon.ico" />
+  <link rel="shortcut icon" href="https://cdn.bkappi.com/ProjectsAssets/BkappiGeneral/bkappiIcon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "R2 Explorer",
+    "description": "A modern full-stack platform for managing Cloudflare R2 storage buckets with rich UI, drag-and-drop uploads, multi-language support, and ZIP downloads.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web",
+    "author": { "@type": "Person", "name": "Bruno Kappi", "url": "https://myportfolio.bkappi.com/" },
+    "url": "https://github.com/BrunoKappi/r2-explorer",
+    "codeRepository": "https://github.com/BrunoKappi/r2-explorer",
+    "programmingLanguage": ["TypeScript", "React", "Node.js"],
+    "license": "https://opensource.org/licenses/Apache-2.0"
+  }
+  </script>
+</head>
+<body>
+
+<!-- ======== NAVBAR ======== -->
+<nav id="navbar" role="navigation" aria-label="Main navigation">
+  <div class="nav-container">
+    <a href="#" class="nav-brand" aria-label="R2 Explorer Home">
+      <img src="https://cdn.bkappi.com/ProjectsAssets/BkappiGeneral/bkappiIcon.ico" alt="R2 Explorer icon" class="nav-icon" width="28" height="28" />
+      <span class="nav-title">R2 Explorer</span>
+    </a>
+    <div class="nav-links" id="nav-links">
+      <a href="#features" class="nav-link" data-i18n="nav.features">Features</a>
+      <a href="#screenshots" class="nav-link" data-i18n="nav.screenshots">Screenshots</a>
+      <a href="#tech" class="nav-link" data-i18n="nav.tech">Tech Stack</a>
+      <a href="#how-it-works" class="nav-link" data-i18n="nav.howto">Quick Start</a>
+      <a href="#developer" class="nav-link" data-i18n="nav.developer">Developer</a>
+    </div>
+    <div class="nav-actions">
+      <div class="lang-selector" id="lang-selector">
+        <button class="lang-btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="lang-current">EN</span>
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown" hidden>
+          <button class="lang-option active" data-lang="en">🇺🇸 English</button>
+          <button class="lang-option" data-lang="pt-BR">🇧🇷 Português</button>
+          <button class="lang-option" data-lang="es">🇪🇸 Español</button>
+        </div>
+      </div>
+      <button id="theme-toggle" class="theme-btn" aria-label="Toggle light/dark theme">
+        <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <a href="https://github.com/BrunoKappi/r2-explorer" id="nav-cta-btn" class="btn btn-primary nav-cta" target="_blank" rel="noopener noreferrer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        <span data-i18n="nav.github">GitHub</span>
+      </a>
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle mobile menu" aria-expanded="false">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ======== HERO ======== -->
+<section id="hero" class="hero">
+  <div class="hero-bg-gradient"></div>
+  <div class="container hero-content">
+    <div class="hero-badge animate-fade-up">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      <span data-i18n="hero.badge">Open Source on GitHub</span>
+    </div>
+    <h1 id="hero-heading" class="hero-title animate-fade-up anim-d1">
+      <span data-i18n="hero.title1">The Modern</span><br />
+      <span class="gradient-text" data-i18n="hero.title2">Cloudflare R2 Explorer</span>
+    </h1>
+    <p class="hero-subtitle animate-fade-up anim-d2" data-i18n="hero.subtitle">
+      A robust, full-stack platform for managing, visualizing, and performing deep operations on your Cloudflare R2 storage buckets — with a premium UI, multilingual support, and powerful batch operations.
+    </p>
+    <div class="hero-actions animate-fade-up anim-d3">
+      <a href="https://github.com/BrunoKappi/r2-explorer" id="hero-cta-btn" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        <span data-i18n="hero.cta">View on GitHub</span>
+      </a>
+      <a href="#features" id="hero-features-btn" class="btn btn-secondary btn-lg">
+        <span data-i18n="hero.exploreFeatures">Explore Features</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+    </div>
+    <div class="hero-stats animate-fade-up anim-d4">
+      <div class="hero-stat"><span class="hero-stat-number">5</span><span class="hero-stat-label" data-i18n="hero.stat1">Languages</span></div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><span class="hero-stat-number">6</span><span class="hero-stat-label" data-i18n="hero.stat2">View Modes</span></div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><span class="hero-stat-number">100MB</span><span class="hero-stat-label" data-i18n="hero.stat3">Per File</span></div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><span class="hero-stat-number">∞</span><span class="hero-stat-label" data-i18n="hero.stat4">Bucket Size</span></div>
+    </div>
+  </div>
+  <div class="hero-preview animate-fade-up anim-d5">
+    <div class="hero-preview-wrapper">
+      <div class="hero-preview-bar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="preview-url">r2-explorer / bucket</span>
+      </div>
+      <img src="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/FoldersViewDark.png"
+           alt="R2 Explorer dark mode folder view — file browser with navigation breadcrumbs and toolbar"
+           class="hero-preview-img dark-img" width="1200" height="700" loading="eager" />
+      <img src="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/FoldersViewLight.png"
+           alt="R2 Explorer light mode folder view — file browser with navigation breadcrumbs and toolbar"
+           class="hero-preview-img light-img" width="1200" height="700" loading="eager" />
+    </div>
+  </div>
+</section>
+
+<!-- ======== FEATURES ======== -->
+<section id="features" class="section features-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span data-i18n="features.badge">Core Features</span>
+      </div>
+      <h2 class="section-title"><span data-i18n="features.title.pre">Everything You Need to</span><br /><span class="gradient-text" data-i18n="features.title.accent">Manage Cloudflare R2</span></h2>
+      <p class="section-subtitle" data-i18n="features.subtitle">A complete suite of tools designed to give you full control over your R2 storage buckets — all in a beautiful, intuitive interface.</p>
+    </div>
+    <div class="features-grid">
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#3b82f6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.upload.title">Recursive Folder Upload</h3>
+        <p class="feature-desc" data-i18n="features.upload.desc">Drag entire folder structures from your OS directly into the explorer. Nested sub-folders are recursively processed, perfectly reproducing your directory tree in R2.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.upload.i1">External OS Drag &amp; Drop</li>
+          <li data-i18n="features.upload.i2">Recursive folder tree replication</li>
+          <li data-i18n="features.upload.i3">Floating real-time progress queue</li>
+          <li data-i18n="features.upload.i4">Transfer speed indicator</li>
+          <li data-i18n="features.upload.i5">Error retry support</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#8b5cf6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.dnd.title">Internal Drag &amp; Drop</h3>
+        <p class="feature-desc" data-i18n="features.dnd.desc">Reorganize files and folders inside the explorer by dragging rows onto target folders — completely separated from OS file-drop events.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.dnd.i1">Move files between folders visually</li>
+          <li data-i18n="features.dnd.i2">Isotropic event handling</li>
+          <li data-i18n="features.dnd.i3">No OS drag interference</li>
+          <li data-i18n="features.dnd.i4">Visual drop target highlighting</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#10b981">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.bulk.title">Bulk Actions &amp; ZIP Downloads</h3>
+        <p class="feature-desc" data-i18n="features.bulk.desc">Select multiple files or entire folders and perform simultaneous operations. Package items into a dynamically generated ZIP archive processed server-side.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.bulk.i1">Multi-select with Ctrl/Shift/Cmd</li>
+          <li data-i18n="features.bulk.i2">Marquee lasso selection box</li>
+          <li data-i18n="features.bulk.i3">ZIP download (server-side streaming)</li>
+          <li data-i18n="features.bulk.i4">Mass move &amp; delete</li>
+          <li data-i18n="features.bulk.i5">Copy paths to clipboard</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#f59e0b">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.views.title">6 View Layout Modes</h3>
+        <p class="feature-desc" data-i18n="features.views.desc">Switch between six distinct view modes to browse your files exactly the way you prefer — from detailed lists to large icon grids and mosaic previews.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.views.i1">Details (list) view</li>
+          <li data-i18n="features.views.i2">Small / Medium / Large icons</li>
+          <li data-i18n="features.views.i3">Extra-Large icons</li>
+          <li data-i18n="features.views.i4">Mosaic view (image gallery)</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#ef4444">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.ctx.title">Rich Context Menu</h3>
+        <p class="feature-desc" data-i18n="features.ctx.desc">Right-click any item for a full set of operations. The context-aware menu adapts to files, folders, and empty areas — exposing only relevant actions.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.ctx.i1">Open / Navigate</li>
+          <li data-i18n="features.ctx.i2">Rename with inline input</li>
+          <li data-i18n="features.ctx.i3">Move to any directory</li>
+          <li data-i18n="features.ctx.i4">Copy path / Share CDN link</li>
+          <li data-i18n="features.ctx.i5">Download file or folder as ZIP</li>
+          <li data-i18n="features.ctx.i6">View properties &amp; metadata</li>
+          <li data-i18n="features.ctx.i7">Delete with confirmation</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#06b6d4">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.details.title">Object Properties &amp; Metadata</h3>
+        <p class="feature-desc" data-i18n="features.details.desc">Inspect full file metadata including MIME type, MD5 hash (ETag), file size, timestamps, and custom Cloudflare metadata tags — with inline media previews.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.details.i1">MIME type detection</li>
+          <li data-i18n="features.details.i2">MD5 / ETag hash display</li>
+          <li data-i18n="features.details.i3">Image &amp; video inline preview</li>
+          <li data-i18n="features.details.i4">Custom metadata tags (key/value)</li>
+          <li data-i18n="features.details.i5">CDN public URL copy</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#a78bfa">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.i18n.title">5-Language Internationalization</h3>
+        <p class="feature-desc" data-i18n="features.i18n.desc">The entire interface is fully localized in 5 languages. Browser language is auto-detected. Switch on-the-fly using the globe selector.</p>
+        <ul class="feature-list">
+          <li>🇺🇸 English</li>
+          <li>🇧🇷 Português (pt-BR)</li>
+          <li>🇪🇸 Español</li>
+          <li>🇩🇪 Deutsch</li>
+          <li>🇫🇷 Français</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#f97316">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.search.title">Global Search &amp; Navigation</h3>
+        <p class="feature-desc" data-i18n="features.search.desc">Search across the entire bucket with a debounced query that filters results reactively. Navigate directories with interactive breadcrumb paths.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.search.i1">Full-bucket global search</li>
+          <li data-i18n="features.search.i2">Debounced reactive filtering</li>
+          <li data-i18n="features.search.i3">Interactive breadcrumb navigation</li>
+          <li data-i18n="features.search.i4">Navigate to search result folder</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#84cc16">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.stats.title">Bucket Statistics</h3>
+        <p class="feature-desc" data-i18n="features.stats.desc">Get a comprehensive overview of your bucket: total files, folder count, cumulative size, average file size, estimated ZIP payload, and file type distribution.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.stats.i1">Total files &amp; folder count</li>
+          <li data-i18n="features.stats.i2">Cumulative storage size</li>
+          <li data-i18n="features.stats.i3">Average file size</li>
+          <li data-i18n="features.stats.i4">Extension distribution chart</li>
+          <li data-i18n="features.stats.i5">Estimated ZIP payload size</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#ec4899">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.sec.title">Password Protection &amp; Security</h3>
+        <p class="feature-desc" data-i18n="features.sec.desc">All credentials stay strictly server-side. Access is protected by a configurable password gate. CORS origins are configurable per deployment.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.sec.i1">Server-side credentials only</li>
+          <li data-i18n="features.sec.i2">Access password gate</li>
+          <li data-i18n="features.sec.i3">Configurable CORS origins</li>
+          <li data-i18n="features.sec.i4">Session persistence via localStorage</li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#6366f1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h.01M12 14h4"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.kbd.title">Keyboard Shortcuts</h3>
+        <p class="feature-desc" data-i18n="features.kbd.desc">Navigate and manage files at the speed of thought with built-in keyboard shortcuts that mimic native OS file explorer behavior.</p>
+        <ul class="feature-list">
+          <li><kbd>Ctrl+A</kbd> — <span data-i18n="features.kbd.i1">Select All</span></li>
+          <li><kbd>Ctrl+C / Ctrl+V</kbd> — <span data-i18n="features.kbd.i2">Copy &amp; Paste</span></li>
+          <li><kbd>Delete</kbd> — <span data-i18n="features.kbd.i3">Delete selected</span></li>
+          <li><kbd>F2</kbd> — <span data-i18n="features.kbd.i4">Rename</span></li>
+          <li><kbd>Enter</kbd> — <span data-i18n="features.kbd.i5">Open / Preview</span></li>
+        </ul>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon-wrap" style="--ic:#14b8a6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3 class="feature-title" data-i18n="features.prefix.title">Prefix Mode Toggle</h3>
+        <p class="feature-desc" data-i18n="features.prefix.desc">Toggle between virtual folder mode (S3 delimiter navigation) and flat object listing — showing all raw S3 keys recursively without grouping.</p>
+        <ul class="feature-list">
+          <li data-i18n="features.prefix.i1">Virtual folder tree (S3 delimiter)</li>
+          <li data-i18n="features.prefix.i2">Flat recursive object listing</li>
+          <li data-i18n="features.prefix.i3">Auto-create bucket on first load</li>
+        </ul>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ======== SCREENSHOTS ======== -->
+<section id="screenshots" class="section screenshots-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span data-i18n="screenshots.badge">Interface Preview</span>
+      </div>
+      <h2 class="section-title"><span data-i18n="screenshots.title.pre">See R2 Explorer </span><span class="gradient-text" data-i18n="screenshots.title.accent">in Action</span></h2>
+      <p class="section-subtitle" data-i18n="screenshots.subtitle">A carefully crafted UI that feels familiar, fast, and powerful.</p>
+    </div>
+    <div class="screenshots-tabs" role="tablist">
+      <button class="ss-tab active" data-tab="folders" role="tab" aria-selected="true" data-i18n="screenshots.t1">Folder View</button>
+      <button class="ss-tab" data-tab="icons" role="tab" aria-selected="false" data-i18n="screenshots.t2">Large Icons</button>
+      <button class="ss-tab" data-tab="images" role="tab" aria-selected="false" data-i18n="screenshots.t3">Image Gallery</button>
+      <button class="ss-tab" data-tab="prefixes" role="tab" aria-selected="false" data-i18n="screenshots.t4">Prefix Mode</button>
+      <button class="ss-tab" data-tab="stats" role="tab" aria-selected="false" data-i18n="screenshots.t5">Statistics</button>
+    </div>
+    <div class="ss-content">
+      <div class="ss-panel active" id="ss-folders">
+        <div class="ss-frame">
+          <img src="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/FoldersViewDark.png"
+               alt="R2 Explorer Folder View dark theme — main file explorer with folder navigation, breadcrumbs, and toolbar"
+               loading="lazy" width="1200" height="700" />
+        </div>
+        <div class="ss-caption">
+          <h3 data-i18n="screenshots.c1t">Folder Navigation View</h3>
+          <p data-i18n="screenshots.c1d">Navigate your R2 bucket with breadcrumb trails, virtual folder hierarchies, and an intuitive toolbar. Right-click any item for quick operations.</p>
+        </div>
+      </div>
+      <div class="ss-panel" id="ss-icons">
+        <div class="ss-frame">
+          <img src="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/FolderViewWithFoldersWithLargeIconsDark.png"
+               alt="R2 Explorer Large Icons View — files and folders displayed as large icon grid cards"
+               loading="lazy" width="1200" height="700" />
+        </div>
+        <div class="ss-caption">
+          <h3 data-i18n="screenshots.c2t">Large Icons Grid View</h3>
+          <p data-i18n="screenshots.c2d">Switch to icon grid view for visual browsing. Six density levels let you choose exactly how much information to display.</p>
+        </div>
+      </div>
+      <div class="ss-panel" id="ss-images">
+        <div class="ss-frame">
+          <img src="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/ImagesViewInsiderFolderDark.png"
+               alt="R2 Explorer Image Gallery — mosaic image thumbnail preview inside a folder"
+               loading="lazy" width="1200" height="700" />
+        </div>
+        <div class="ss-caption">
+          <h3 data-i18n="screenshots.c3t">Image Gallery &amp; Mosaic View</h3>
+          <p data-i18n="screenshots.c3d">Browse image-heavy folders with the mosaic view, displaying thumbnails directly from your CDN — perfect for managing media assets.</p>
+        </div>
+      </div>
+      <div class="ss-panel" id="ss-prefixes">
+        <div class="ss-frame">
+          <img src="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/ListViewsAsPrefixesDark.png"
+               alt="R2 Explorer Prefix Mode — flat object list view with all S3 keys listed by prefix"
+               loading="lazy" width="1200" height="700" />
+        </div>
+        <div class="ss-caption">
+          <h3 data-i18n="screenshots.c4t">Flat Prefix / Object Listing Mode</h3>
+          <p data-i18n="screenshots.c4d">Toggle between virtual folder mode and flat S3 prefix listing. See all object keys as stored in R2 — ideal for debugging.</p>
+        </div>
+      </div>
+      <div class="ss-panel" id="ss-stats">
+        <div class="ss-frame">
+          <img src="https://cdn.bkappi.com/ProjectsAssets/R2-Explorer/LandingPage/StatisticsView.png"
+               alt="R2 Explorer Statistics View — bucket stats modal with total files, folders, and storage size"
+               loading="lazy" width="1200" height="700" />
+        </div>
+        <div class="ss-caption">
+          <h3 data-i18n="screenshots.c5t">Bucket Statistics Dashboard</h3>
+          <p data-i18n="screenshots.c5d">Instant overview of your bucket: total files, folders, cumulative storage size, average file size, and extension distribution.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== TECH STACK ======== -->
+<section id="tech" class="section tech-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 22 22 7 12 2"/></svg>
+        <span data-i18n="tech.badge">Architecture</span>
+      </div>
+      <h2 class="section-title"><span data-i18n="tech.title.pre">Built with a </span><span class="gradient-text" data-i18n="tech.title.accent">Modern Stack</span></h2>
+      <p class="section-subtitle" data-i18n="tech.subtitle">Production-ready architecture combining React 19, Express, AWS SDK v3, and Tailwind CSS v4.</p>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(97,218,251,.12);color:#61dafb">⚛</div><div><h3 class="tech-name">React 19</h3><p class="tech-role" data-i18n="tech.react">Frontend UI with hooks and concurrent features</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(49,120,198,.12);color:#3178c6">TS</div><div><h3 class="tech-name">TypeScript</h3><p class="tech-role" data-i18n="tech.ts">Full-stack type safety across frontend and backend</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(255,255,255,.06);color:#999">Ex</div><div><h3 class="tech-name">Express.js</h3><p class="tech-role" data-i18n="tech.express">REST API with CORS, auth, and file routing</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(255,153,0,.1);color:#ff9900">S3</div><div><h3 class="tech-name">AWS SDK v3 (S3)</h3><p class="tech-role" data-i18n="tech.aws">S3-compatible client for Cloudflare R2</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(255,70,0,.1);color:#ff4500">TQ</div><div><h3 class="tech-name">TanStack Query</h3><p class="tech-role" data-i18n="tech.query">Enterprise caching and optimistic mutations</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(255,150,50,.1);color:#ff9632">Z</div><div><h3 class="tech-name">Zustand</h3><p class="tech-role" data-i18n="tech.zustand">Lightweight reactive global state</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(100,220,120,.1);color:#64dc78">V</div><div><h3 class="tech-name">Vite 6</h3><p class="tech-role" data-i18n="tech.vite">Lightning-fast build tool and dev server</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(100,100,255,.1);color:#6464ff">M</div><div><h3 class="tech-name">Motion</h3><p class="tech-role" data-i18n="tech.motion">Smooth animations and micro-interactions</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(38,166,154,.1);color:#26a69a">A</div><div><h3 class="tech-name">Archiver</h3><p class="tech-role" data-i18n="tech.archiver">Server-side streaming ZIP generation</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(0,164,255,.1);color:#00a4ff">i18</div><div><h3 class="tech-name">i18next</h3><p class="tech-role" data-i18n="tech.i18n">Internationalization with browser detection</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(56,189,248,.1);color:#38bdf8">TW</div><div><h3 class="tech-name">Tailwind v4</h3><p class="tech-role" data-i18n="tech.tailwind">Utility-first styling with dark mode</p></div></div>
+      <div class="tech-card"><div class="tech-icon" style="background:rgba(248,208,0,.1);color:#f8d000">es</div><div><h3 class="tech-name">esbuild</h3><p class="tech-role" data-i18n="tech.esbuild">Ultra-fast backend TypeScript bundling</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== HOW IT WORKS ======== -->
+<section id="how-it-works" class="section how-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span data-i18n="how.badge">Quick Setup</span>
+      </div>
+      <h2 class="section-title"><span data-i18n="how.title.pre">Get Started in </span><span class="gradient-text" data-i18n="how.title.accent">Minutes</span></h2>
+      <p class="section-subtitle" data-i18n="how.subtitle">Clone, configure, and launch — your R2 bucket manager is ready.</p>
+    </div>
+    <div class="steps-container">
+      <div class="step">
+        <div class="step-number">01</div>
+        <div class="step-content">
+          <h3 class="step-title" data-i18n="how.s1t">Clone &amp; Install</h3>
+          <p class="step-desc" data-i18n="how.s1d">Clone the repository and install all dependencies with npm.</p>
+          <div class="code-block">
+            <div class="code-block-hdr">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" data-copy="git clone https://github.com/BrunoKappi/r2-explorer.git
+cd r2-explorer
+npm install" aria-label="Copy command">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <pre><code><span class="c-comment"># Clone the repository</span>
+<span class="c-cmd">git clone</span> https://github.com/BrunoKappi/r2-explorer.git
+<span class="c-cmd">cd</span> r2-explorer
+<span class="c-cmd">npm install</span></code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">02</div>
+        <div class="step-content">
+          <h3 class="step-title" data-i18n="how.s2t">Configure Environment</h3>
+          <p class="step-desc" data-i18n="how.s2d">Create a <code>.env</code> file with your Cloudflare R2 credentials.</p>
+          <div class="code-block">
+            <div class="code-block-hdr">
+              <span class="code-lang">.env</span>
+              <button class="copy-btn" data-copy="R2_ACCESS_KEY_ID=your_access_key_here
+R2_SECRET_ACCESS_KEY=your_secret_key_here
+R2_ENDPOINT=https://ACCOUNT_ID.r2.cloudflarestorage.com
+R2_BUCKET_NAME=my-bucket
+ACCESS_PASSWORD=your_secure_password
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000" aria-label="Copy env config">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <pre><code><span class="c-key">R2_ACCESS_KEY_ID</span>=<span class="c-val">your_access_key</span>
+<span class="c-key">R2_SECRET_ACCESS_KEY</span>=<span class="c-val">your_secret_key</span>
+<span class="c-key">R2_ENDPOINT</span>=<span class="c-val">https://ACCOUNT_ID.r2.cloudflarestorage.com</span>
+<span class="c-key">R2_BUCKET_NAME</span>=<span class="c-val">my-bucket</span>
+<span class="c-key">ACCESS_PASSWORD</span>=<span class="c-val">your_secure_password</span>
+<span class="c-key">ALLOWED_ORIGINS</span>=<span class="c-val">http://localhost:5173</span></code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">03</div>
+        <div class="step-content">
+          <h3 class="step-title" data-i18n="how.s3t">Launch Dev Server</h3>
+          <p class="step-desc" data-i18n="how.s3d">Start both Express backend and Vite frontend simultaneously.</p>
+          <div class="code-block">
+            <div class="code-block-hdr">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" data-copy="npm run dev" aria-label="Copy start command">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <pre><code><span class="c-comment"># Start frontend + backend concurrently</span>
+<span class="c-cmd">npm run dev</span>
+<span class="c-comment"># Opens at http://localhost:3000</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== DEVELOPER ======== -->
+<section id="developer" class="section developer-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span data-i18n="dev.badge">About the Developer</span>
+      </div>
+      <h2 class="section-title"><span data-i18n="dev.title.pre">Built by </span><span class="gradient-text">Bruno Kappi</span></h2>
+    </div>
+    <div class="developer-card">
+      <div class="dev-avatar-wrap">
+        <div class="dev-avatar">
+          <img src="https://cdn.bkappi.com/BrunoKappi/Images/ProfilePicture.jpg"
+               alt="Bruno Kappi — Fullstack Developer"
+               width="120" height="120" loading="lazy" />
+        </div>
+        <div class="dev-avatar-ring"></div>
+      </div>
+      <div class="dev-info">
+        <div class="dev-name-wrap">
+          <h3 class="dev-name">Bruno Kappi</h3>
+          <div class="dev-title-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span data-i18n="dev.role">Fullstack Developer &amp; Systems Analyst</span>
+          </div>
+        </div>
+        <div class="dev-location">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span data-i18n="dev.location">Novo Hamburgo, Rio Grande do Sul, Brazil</span>
+        </div>
+        <p class="dev-bio" data-i18n="dev.bio1">With a background in both industrial automation and modern web development, Bruno brings a rare blend of technical depth and product vision to everything he builds.</p>
+        <p class="dev-bio" data-i18n="dev.bio2">He believes software should be elegant, efficient, and most of all, useful.</p>
+        <div class="dev-links">
+          <a href="https://myportfolio.bkappi.com/" class="dev-link" target="_blank" rel="noopener noreferrer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span data-i18n="dev.portfolio">Portfolio</span>
+          </a>
+          <a href="https://www.linkedin.com/in/brunokappi/" class="dev-link" target="_blank" rel="noopener noreferrer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            <span>LinkedIn</span>
+          </a>
+          <a href="https://blog.bkappi.com/" class="dev-link" target="_blank" rel="noopener noreferrer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span data-i18n="dev.blog">Blog</span>
+          </a>
+          <a href="https://github.com/BrunoKappi/r2-explorer" class="dev-link" target="_blank" rel="noopener noreferrer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            <span>GitHub</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== CTA ======== -->
+<section id="cta" class="section cta-section">
+  <div class="cta-bg-gradient"></div>
+  <div class="container cta-content">
+    <h2 class="cta-title"><span data-i18n="cta.title.pre">Ready to Explore Your</span><br /><span class="gradient-text">R2 Bucket?</span></h2>
+    <p class="cta-subtitle" data-i18n="cta.subtitle">Open source, self-hosted, and completely free. Fork it, customize it, and make it yours.</p>
+    <div class="cta-actions">
+      <a href="https://github.com/BrunoKappi/r2-explorer" id="cta-main-btn" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        <span data-i18n="cta.btn">Star on GitHub</span>
+      </a>
+    </div>
+    <div class="cta-license">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span data-i18n="cta.license">Licensed under Apache 2.0 — free for personal and commercial use.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FOOTER ======== -->
+<footer class="footer">
+  <div class="container footer-content">
+    <div class="footer-brand">
+      <img src="https://cdn.bkappi.com/ProjectsAssets/BkappiGeneral/bkappiIcon.ico" alt="" width="18" height="18" />
+      <span>R2 Explorer</span>
+    </div>
+    <p class="footer-copy" data-i18n="footer.copy">Built with ❤️ by <a href="https://myportfolio.bkappi.com/" target="_blank" rel="noopener noreferrer">Bruno Kappi</a> · Apache 2.0 License</p>
+    <div class="footer-links">
+      <a href="https://github.com/BrunoKappi/r2-explorer" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://myportfolio.bkappi.com/" target="_blank" rel="noopener noreferrer" data-i18n="dev.portfolio">Portfolio</a>
+      <a href="https://blog.bkappi.com/" target="_blank" rel="noopener noreferrer" data-i18n="dev.blog">Blog</a>
+      <a href="https://www.linkedin.com/in/brunokappi/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

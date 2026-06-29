@@ -10,3 +10,14 @@ coverage/
 .agents/
 graphify-out/
 kb_database.md
+
+# Automatically added agent and env ignores
+.env
+.env.development
+.env.production
+.antigravityignore
+.graphifyignore
+.geminiignore
+.claudeignore
+agentsIgnore
+configFiles
